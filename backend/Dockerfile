@@ -45,6 +45,6 @@ EXPOSE 8080
 
 # Configuration is environment-driven at runtime (see application.yml).
 # No credentials are baked into the image.
-ENV SERVER_PORT=8080
+ENV SERVER_PORT=${PORT:-8080}
 
 ENTRYPOINT ["java", "-jar", "/app/app.jar"]

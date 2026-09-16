@@ -1,0 +1,30 @@
+# syntax=docker/dockerfile:1
+
+FROM maven:3.9-eclipse-temurin-21 AS build
+
+WORKDIR /workspace
+
+COPY pom.xml ./
+
+RUN mvn -B -q -DskipTests dependency:go-offline
+
+COPY src ./src
+
+RUN mvn -B -q -DskipTests package
+
+
+FROM eclipse-temurin:21-jre-alpine
+
+RUN addgroup -S todo && adduser -S todo -G todo
+
+WORKDIR /app
+
+COPY --from=build /workspace/target/todo-app-backend-0.1.0-SNAPSHOT.jar ./app.jar
+
+RUN chown -R todo:todo /app
+
+USER todo:todo
+
+ENV SERVER_PORT=${PORT:-8080}
+
+ENTRYPOINT ["java", "-jar", "/app/app.jar"]
