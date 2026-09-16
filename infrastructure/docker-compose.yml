@@ -1,0 +1,126 @@
+# ===========================================================================
+# docker-compose — Todo App full local stack
+#
+#   postgres   PostgreSQL 16 (named volume back-persisted data)
+#   backend    Spring Boot 3.5 / Java 21 REST API (Flyway owns the schema)
+#   frontend   Flutter Web SPA served by nginx (SPA fallback for deep links)
+#
+# Host ports (established TODO local skew, do not collide with the unrelated
+# url-shortener's 5432/8080):
+#   postgres   http://localhost:5433  (container 5432)
+#   backend    http://localhost:8080  (container 8080)
+#   frontend   http://localhost:3000  (container 80)
+#
+# Backend container networking (service-to-service, NOT localhost):
+#   backend -> postgres:5432  (DB_HOST=postgres, DB_PORT=5432)
+# Browser networking (host-resolvable, NOT "backend:8080"):
+#   browser  -> http://localhost:8080
+#
+# Secrets: every value is env-substituted from infrastructure/.env. Real
+# secrets belong ONLY in infrastructure/.env (git-ignored). Placeholders live
+# in .env.example. Nothing is hard-coded in this file, in the Dockerfiles, or
+# in the application source.
+# ===========================================================================
+
+name: todo-app
+
+networks:
+  todo-network:
+    name: todo-network
+    driver: bridge
+
+volumes:
+  postgres_data:
+    name: todo-app-postgres-data
+
+services:
+  # ---------------------------------------------------------------------------
+  # PostgreSQL 16
+  # ---------------------------------------------------------------------------
+  postgres:
+    image: postgres:16-alpine
+    container_name: todo-app-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-todo_app}
+      POSTGRES_USER: ${DB_USERNAME:-todo_app}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-todo_app}
+    ports:
+      - "${DB_PORT:-5433}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-todo_app} -d ${DB_NAME:-todo_app}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 5s
+    networks:
+      - todo-network
+
+  # ---------------------------------------------------------------------------
+  # Backend — Spring Boot REST API (Java 21 / Spring Boot 3.5)
+  # ---------------------------------------------------------------------------
+  backend:
+    build:
+      context: ../backend
+    image: todo-app-backend:local
+    container_name: todo-app-backend
+    restart: unless-stopped
+    environment:
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_NAME: ${DB_NAME:-todo_app}
+      DB_USERNAME: ${DB_USERNAME:-todo_app}
+      DB_PASSWORD: ${DB_PASSWORD:-todo_app}
+      # Local-dev placeholder only. Never reused outside the local stack and
+      # never committed — infrastructure/.env (git-ignored) must supply the
+      # real value in any other environment.
+      JWT_SECRET: ${JWT_SECRET:-todo-app-local-development-jwt-secret-change-me}
+      JWT_ISSUER: ${JWT_ISSUER:-todo-app}
+      JWT_ACCESS_TOKEN_EXPIRATION: ${JWT_ACCESS_TOKEN_EXPIRATION:-900}
+      JWT_REFRESH_TOKEN_EXPIRATION: ${JWT_REFRESH_TOKEN_EXPIRATION:-2592000}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:8080}
+      SERVER_PORT: "8080"
+    ports:
+      - "${BACKEND_PORT:-8080}:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      # Readiness reflects PostgreSQL availability (Phase 15 endpoint).
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost:8080/api/v1/health/readiness || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+    networks:
+      - todo-network
+
+  # ---------------------------------------------------------------------------
+  # Frontend — Flutter Web SPA (nginx)
+  # ---------------------------------------------------------------------------
+  frontend:
+    build:
+      context: ../frontend
+      args:
+        # Browser-addressable backend URL (host-published), NOT "backend:8080".
+        API_BASE_URL: ${API_BASE_URL:-http://localhost:8080}
+    image: todo-app-frontend:local
+    container_name: todo-app-frontend
+    restart: unless-stopped
+    environment:
+      API_BASE_URL: ${API_BASE_URL:-http://localhost:8080}
+    ports:
+      - "${FRONTEND_PORT:-3000}:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1/ || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    networks:
+      - todo-network

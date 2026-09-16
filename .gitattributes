@@ -1,0 +1,27 @@
+# ---------------------------------------------------------------------------
+# .gitattributes - line endings and executable permissions
+# ---------------------------------------------------------------------------
+
+# Default: normalise line endings for text files
+* text=auto eol=lf
+
+# Windows-only files keep CRLF
+*.cmd text eol=crlf
+*.bat text eol=crlf
+*.ps1 text eol=crlf
+
+# Maven wrapper must be executable on Linux (CI runs on ubuntu-latest)
+mvnw text eol=lf
+mvnw chmod=+x
+
+# Shell scripts
+*.sh text eol=lf
+*.sh chmod=+x
+
+# Binary / generated - do not diff
+*.jar binary
+*.png binary
+*.jpg binary
+*.ico binary
+*.ttf binary
+*.otf binary

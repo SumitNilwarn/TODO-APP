@@ -1,0 +1,941 @@
+import 'package:flutter/material.dart';
+
+import '../../../core/utils/responsive.dart';
+import '../../../data/api/api_exception.dart';
+import '../../../presentation/router/app_router.dart';
+import '../../../shared/theme/design_tokens.dart';
+import '../../../shared/theme/theme_extensions.dart';
+import '../../../shared/widgets/app_button.dart';
+import '../../../shared/widgets/app_card.dart';
+import '../../../shared/widgets/app_chip.dart';
+import '../../../shared/widgets/app_empty_state.dart';
+import '../../../shared/widgets/app_error_state.dart';
+import '../../../shared/widgets/app_loading.dart';
+import '../../../shared/widgets/app_snackbar.dart';
+import '../../../shared/widgets/responsive_container.dart';
+import '../../auth/presentation/app_scope.dart';
+import '../../auth/presentation/authenticated_scaffold.dart';
+import '../data/dashboard_api.dart';
+import '../domain/dashboard_models.dart';
+
+/// Dashboard screen: owner-scoped statistics plus bounded, filterable task
+/// previews.
+///
+/// Data comes exclusively from the authenticated backend endpoints
+/// (`GET /api/v1/dashboard` for the aggregate counters, `GET /api/v1/tasks`
+/// for the preview lists) driven through the authenticated [ApiClient], so
+/// ownership and every counter are resolved server-side — no user id is ever
+/// sent by the client and no unbounded task fetch happens.
+class DashboardPage extends StatefulWidget {
+  const DashboardPage({super.key});
+
+  @override
+  State<DashboardPage> createState() => _DashboardPageState();
+}
+
+class _DashboardPageState extends State<DashboardPage> {
+  late final DashboardApi _api;
+  bool _bootstrapped = false;
+
+  bool _loading = true;
+  bool _refreshing = false;
+  String? _loadError;
+
+  /// Set when a refresh (e.g. from a filter change) arrives while another
+  /// refresh is already running, so the newer request is not silently dropped.
+  bool _refreshQueued = false;
+
+  DashboardSummary? _summary;
+  List<DashboardTask> _recentTasks = const [];
+  List<DashboardTask> _overdueTasks = const [];
+  List<DashboardTask> _upcomingTasks = const [];
+
+  /// Active status filter (`null` = all statuses).
+  DashboardTaskStatus? _statusFilter;
+
+  /// When `true`, the recent list only shows overdue tasks.
+  bool _overdueOnly = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // The authenticated client lives on AppScope, so grab it here (the first
+    // build that has the dependency available) rather than in initState.
+    if (!_bootstrapped) {
+      _bootstrapped = true;
+      _api = DashboardApi(AppScope.apiOf(context));
+      // Defer the initial fetch to after the first build so the loading state
+      // is shown without any setState during the build phase.
+      WidgetsBinding.instance.addPostFrameCallback((_) => _loadInitial());
+    }
+  }
+
+  Future<void> _loadInitial() async {
+    setState(() {
+      _loading = true;
+      _loadError = null;
+    });
+    try {
+      final data = await _fetchAll();
+      if (!mounted) return;
+      setState(() {
+        _summary = data.summary;
+        _recentTasks = data.recent;
+        _overdueTasks = data.overdue;
+        _upcomingTasks = data.upcoming;
+        _loading = false;
+      });
+    } on ApiException catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _loading = false;
+        _loadError = _friendlyLoadError(error);
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _loading = false;
+        _loadError = 'Could not load your dashboard. Please try again.';
+      });
+    }
+  }
+
+  /// Re-fetches everything while keeping the current screen visible.
+  Future<void> _refresh() async {
+    if (_loading) return;
+    if (_refreshing) {
+      // A refresh is already in flight; remember that a newer dataset (e.g. a
+      // filter change applied mid-refresh) is wanted so it runs right after.
+      _refreshQueued = true;
+      return;
+    }
+    setState(() => _refreshing = true);
+    try {
+      final data = await _fetchAll();
+      if (!mounted) return;
+      setState(() {
+        _summary = data.summary;
+        _recentTasks = data.recent;
+        _overdueTasks = data.overdue;
+        _upcomingTasks = data.upcoming;
+      });
+    } on ApiException catch (error) {
+      if (!mounted) return;
+      AppSnackbar.show(
+        context,
+        'Refresh failed. ${_friendlyRefreshError(error)}',
+        variant: AppFeedbackVariant.danger,
+      );
+    } catch (_) {
+      if (!mounted) return;
+      AppSnackbar.show(
+        context,
+        'Refresh failed. Please try again.',
+        variant: AppFeedbackVariant.danger,
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _refreshing = false);
+        if (_refreshQueued) {
+          _refreshQueued = false;
+          _refresh();
+        }
+      }
+    }
+  }
+
+  Future<_DashboardData> _fetchAll() async {
+    final today = _todayUtc();
+    // Four bounded, parallel, owner-scoped requests. `Future.wait` is used
+    // instead of the record `.wait` extension because the latter wraps errors
+    // in a ParallelWaitError, which would mask the ApiException and defeat the
+    // safe error mapping below.
+    final results = await Future.wait<Object>([
+      _api.getSummary(),
+      _api.getTasks(
+        size: 10,
+        sort: 'createdAt',
+        direction: 'DESC',
+        status: _statusFilter,
+        overdue: _overdueOnly,
+      ),
+      _api.getTasks(size: 5, overdue: true, sort: 'dueDate', direction: 'ASC'),
+      _api.getTasks(
+        size: 5,
+        dueDateFrom: today,
+        sort: 'dueDate',
+        direction: 'ASC',
+      ),
+    ], eagerError: true);
+    return _DashboardData(
+      summary: results[0] as DashboardSummary,
+      recent: (results[1] as DashboardTaskPage).tasks,
+      overdue: (results[2] as DashboardTaskPage).tasks,
+      upcoming: (results[3] as DashboardTaskPage).tasks,
+    );
+  }
+
+  void _applyFilter({DashboardTaskStatus? status, bool? overdue}) {
+    setState(() {
+      if (status != null) _statusFilter = status;
+      if (overdue != null) _overdueOnly = overdue;
+    });
+    _refresh();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AuthenticatedScaffold(
+      selectedIndex: 0,
+      title: 'Dashboard',
+      subtitle: 'Overview of your tasks and progress',
+      actions: [
+        IconButton(
+          key: const Key('dashboard-refresh'),
+          tooltip: 'Refresh dashboard',
+          onPressed: _loading || _refreshing ? null : _refresh,
+          icon: _refreshing
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Icon(Icons.refresh_rounded),
+        ),
+      ],
+      body: _buildBody(context),
+    );
+  }
+
+  Widget _buildBody(BuildContext context) {
+    if (_loading) {
+      return const AppLoading(label: 'Loading your dashboard…');
+    }
+    if (_loadError != null) {
+      return Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(AppSpacing.giant),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 480),
+            child: AppErrorState(
+              title: 'Could not load your dashboard',
+              message: _loadError,
+              onRetry: _loadInitial,
+            ),
+          ),
+        ),
+      );
+    }
+
+    final summary = _summary!;
+    return ResponsiveContainer(
+      maxWidth: AppBreakpoints.maxContentWidth,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.only(bottom: AppSpacing.xl),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _MetricTiles(summary: summary),
+            const SizedBox(height: AppSpacing.lg),
+            _StatusBreakdown(summary: summary),
+            const SizedBox(height: AppSpacing.lg),
+            _OverdueSection(tasks: _overdueTasks),
+            const SizedBox(height: AppSpacing.lg),
+            _TasksSection(
+              recent: _recentTasks,
+              upcoming: _upcomingTasks,
+              statusFilter: _statusFilter,
+              overdueOnly: _overdueOnly,
+              refreshing: _refreshing,
+              onFilterChanged: _applyFilter,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  static DateTime _todayUtc() {
+    final now = DateTime.now().toUtc();
+    return DateTime(now.year, now.month, now.day);
+  }
+
+  static String _friendlyLoadError(ApiException error) {
+    return _safeStatusMessage(error) ??
+        (error.message?.isNotEmpty == true
+            ? error.message!
+            : 'Could not load your dashboard. Please try again.');
+  }
+
+  static String _friendlyRefreshError(ApiException error) {
+    return _safeStatusMessage(error) ??
+        (error.message?.isNotEmpty == true
+            ? error.message!
+            : 'Please try again.');
+  }
+
+  /// Maps transport and HTTP-status failures to safe, user-facing copy.
+  ///
+  /// A 401 is normally recovered by the authenticated transport (refresh →
+  /// retry); when one still reaches this screen the session could not be
+  /// restored. 403/404/5xx are translated so no backend detail ever leaks;
+  /// 4xx validation errors (400/422) fall through to the server message
+  /// because they carry user-relevant information.
+  static String? _safeStatusMessage(ApiException error) {
+    if (error.isNetworkError) {
+      return 'Could not reach the server. Please check your connection.';
+    }
+    if (error.isTimeout) {
+      return 'The request timed out. Please try again.';
+    }
+    final status = error.statusCode;
+    if (status != null && status >= 500) {
+      return 'An unexpected server error occurred. Please try again.';
+    }
+    return switch (status) {
+      401 => 'Your session has expired. Please sign in again.',
+      403 => "You don't have permission to view this dashboard.",
+      404 => 'This dashboard could not be found.',
+      _ => null,
+    };
+  }
+}
+
+class _DashboardData {
+  const _DashboardData({
+    required this.summary,
+    required this.recent,
+    required this.overdue,
+    required this.upcoming,
+  });
+
+  final DashboardSummary summary;
+  final List<DashboardTask> recent;
+  final List<DashboardTask> overdue;
+  final List<DashboardTask> upcoming;
+}
+
+/// Responsive grid of the six summary metrics.
+class _MetricTiles extends StatelessWidget {
+  const _MetricTiles({required this.summary});
+
+  final DashboardSummary summary;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final columns = constraints.maxWidth >= AppBreakpoints.desktop
+            ? 3
+            : constraints.maxWidth >= AppBreakpoints.tablet
+            ? 2
+            : 1;
+        final tileWidth =
+            (constraints.maxWidth - (columns - 1) * AppSpacing.md) / columns;
+
+        final tiles = <Widget>[
+          _MetricTile(
+            label: 'Total',
+            count: summary.totalTasks,
+            icon: Icons.fact_check_outlined,
+            accent: context.appColors.secondary,
+          ),
+          _MetricTile(
+            label: 'To do',
+            count: summary.todoTasks,
+            icon: Icons.event_note_outlined,
+            accent: context.appColors.secondary,
+          ),
+          _MetricTile(
+            label: 'In progress',
+            count: summary.inProgressTasks,
+            icon: Icons.pending_actions_outlined,
+            accent: context.appColors.info,
+          ),
+          _MetricTile(
+            label: 'Completed',
+            count: summary.completedTasks,
+            icon: Icons.check_circle_outline,
+            accent: context.appColors.success,
+          ),
+          _MetricTile(
+            label: 'Cancelled',
+            count: summary.cancelledTasks,
+            icon: Icons.block_outlined,
+            accent: context.appColors.textMuted,
+          ),
+          _MetricTile(
+            label: 'Overdue',
+            count: summary.overdueTasks,
+            icon: Icons.error_outline_rounded,
+            accent: summary.hasOverdue
+                ? context.appColors.danger
+                : context.appColors.textMuted,
+          ),
+        ];
+
+        return Wrap(
+          spacing: AppSpacing.md,
+          runSpacing: AppSpacing.md,
+          children: [
+            for (final tile in tiles) SizedBox(width: tileWidth, child: tile),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _MetricTile extends StatelessWidget {
+  const _MetricTile({
+    required this.label,
+    required this.count,
+    required this.icon,
+    required this.accent,
+  });
+
+  final String label;
+  final int count;
+  final IconData icon;
+  final Color accent;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    return Semantics(
+      container: true,
+      label: '$label, $count',
+      // The child Text/Icon already announce the value visually; dropping
+      // their semantics keeps screen readers from reading the count twice.
+      excludeSemantics: true,
+      child: AppCard(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: accent.withValues(alpha: 0.12),
+                borderRadius: AppRadius.mdAll,
+              ),
+              child: Icon(icon, size: 22, color: accent),
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '$count',
+                    style: textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: textTheme.bodySmall?.copyWith(
+                      color: context.appColors.textMuted,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Card with four native status bars (label + count + proportional fill).
+class _StatusBreakdown extends StatelessWidget {
+  const _StatusBreakdown({required this.summary});
+
+  final DashboardSummary summary;
+
+  @override
+  Widget build(BuildContext context) {
+    return AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const _SectionHeader(
+            title: 'Status',
+            subtitle: 'Your tasks by status',
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          if (!summary.hasTasks)
+            const AppEmptyState(
+              icon: Icons.inbox_outlined,
+              title: 'No tasks yet',
+              message: 'Create tasks to see a live breakdown here.',
+            )
+          else
+            for (final status in DashboardTaskStatus.values) ...[
+              _StatusBar(
+                label: status.label,
+                count: summary.countFor(status),
+                fraction: summary.fractionFor(status),
+                color: _accentFor(status, context),
+              ),
+              if (status != DashboardTaskStatus.values.last)
+                const SizedBox(height: AppSpacing.md),
+            ],
+        ],
+      ),
+    );
+  }
+
+  static Color _accentFor(DashboardTaskStatus status, BuildContext context) {
+    final tokens = context.appColors;
+    return switch (status) {
+      DashboardTaskStatus.todo => tokens.secondary,
+      DashboardTaskStatus.inProgress => tokens.info,
+      DashboardTaskStatus.completed => tokens.success,
+      DashboardTaskStatus.cancelled => tokens.textMuted,
+    };
+  }
+}
+
+class _StatusBar extends StatelessWidget {
+  const _StatusBar({
+    required this.label,
+    required this.count,
+    required this.fraction,
+    required this.color,
+  });
+
+  final String label;
+  final int count;
+  final double fraction;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final tokens = context.appColors;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            Expanded(child: Text(label, style: textTheme.labelLarge)),
+            Text(
+              '$count',
+              style: textTheme.labelLarge?.copyWith(
+                color: tokens.textSecondary,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.xs),
+        ClipRRect(
+          borderRadius: AppRadius.pillAll,
+          child: SizedBox(
+            height: 10,
+            child: LayoutBuilder(
+              builder: (context, constraints) => Stack(
+                children: [
+                  Container(color: tokens.primaryContainer),
+                  FractionallySizedBox(
+                    widthFactor: fraction.clamp(0.0, 1.0),
+                    child: Container(color: color),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Overdue alert card with a danger-tinted header and task rows.
+class _OverdueSection extends StatelessWidget {
+  const _OverdueSection({required this.tasks});
+
+  final List<DashboardTask> tasks;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final tokens = context.appColors;
+    return AppCard(
+      color: tasks.isEmpty
+          ? tokens.surface
+          : tokens.danger.withValues(alpha: 0.02),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.error_outline_rounded, size: 20, color: tokens.danger),
+              const SizedBox(width: AppSpacing.tight),
+              Expanded(child: Text('Overdue', style: textTheme.titleMedium)),
+              _CountBadge(
+                count: tasks.length,
+                background: tokens.danger.withValues(alpha: 0.12),
+                foreground: tokens.danger,
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            tasks.isEmpty
+                ? "You're all caught up."
+                : 'Past their due date and still open.',
+            style: textTheme.bodySmall?.copyWith(color: tokens.textMuted),
+          ),
+          if (tasks.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.md),
+            _TaskList(tasks: tasks),
+          ] else ...[
+            const SizedBox(height: AppSpacing.lg),
+            const AppEmptyState(
+              icon: Icons.check_circle_outline,
+              title: "You're all caught up",
+              message: 'No tasks are past their due date.',
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// Recent + upcoming task previews with status/overdue filters.
+class _TasksSection extends StatelessWidget {
+  const _TasksSection({
+    required this.recent,
+    required this.upcoming,
+    required this.statusFilter,
+    required this.overdueOnly,
+    required this.refreshing,
+    required this.onFilterChanged,
+  });
+
+  final List<DashboardTask> recent;
+  final List<DashboardTask> upcoming;
+  final DashboardTaskStatus? statusFilter;
+  final bool overdueOnly;
+  final bool refreshing;
+  final void Function({DashboardTaskStatus? status, bool? overdue})
+  onFilterChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final isFiltered = statusFilter != null || overdueOnly;
+    return AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: AppSpacing.sm,
+            runSpacing: AppSpacing.sm,
+            children: [
+              Text('Tasks', style: textTheme.titleMedium),
+              AppButton(
+                label: 'View all tasks',
+                variant: AppButtonVariant.text,
+                icon: Icons.arrow_circle_right_outlined,
+                onPressed: () {
+                  Navigator.of(context).pushReplacementNamed(AppRouter.tasks);
+                },
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            'Preview and filter your most recent tasks.',
+            style: textTheme.bodySmall?.copyWith(
+              color: context.appColors.textMuted,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          _FilterControls(
+            statusFilter: statusFilter,
+            overdueOnly: overdueOnly,
+            onFilterChanged: onFilterChanged,
+          ),
+          if (refreshing) ...[
+            const SizedBox(height: AppSpacing.md),
+            const LinearProgressIndicator(minHeight: 2),
+          ],
+          const SizedBox(height: AppSpacing.lg),
+          Text('Recent', style: textTheme.titleSmall),
+          const SizedBox(height: AppSpacing.sm),
+          if (recent.isEmpty)
+            AppEmptyState(
+              icon: isFiltered
+                  ? Icons.filter_alt_off_outlined
+                  : Icons.inbox_outlined,
+              title: isFiltered
+                  ? 'No tasks match this filter'
+                  : 'You have no tasks yet',
+              message: isFiltered
+                  ? 'Try another status or turn off Overdue only.'
+                  : 'Tasks you add will show up here.',
+            )
+          else
+            _TaskList(tasks: recent),
+          const SizedBox(height: AppSpacing.lg),
+          Text('Coming up', style: textTheme.titleSmall),
+          const SizedBox(height: AppSpacing.sm),
+          if (upcoming.isEmpty)
+            const AppEmptyState(
+              icon: Icons.event_available_outlined,
+              title: 'Nothing scheduled',
+              message: 'No tasks are due today or later.',
+            )
+          else
+            _TaskList(tasks: upcoming),
+        ],
+      ),
+    );
+  }
+}
+
+class _FilterControls extends StatelessWidget {
+  const _FilterControls({
+    required this.statusFilter,
+    required this.overdueOnly,
+    required this.onFilterChanged,
+  });
+
+  final DashboardTaskStatus? statusFilter;
+  final bool overdueOnly;
+  final void Function({DashboardTaskStatus? status, bool? overdue})
+  onFilterChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = context.appColors;
+    return Wrap(
+      spacing: AppSpacing.sm,
+      runSpacing: AppSpacing.sm,
+      children: [
+        AppChoiceChip(
+          label: 'All',
+          selected: statusFilter == null && !overdueOnly,
+          onSelected: () => onFilterChanged(status: null, overdue: null),
+        ),
+        for (final status in DashboardTaskStatus.values)
+          AppChoiceChip(
+            label: status.label,
+            selected: statusFilter == status,
+            onSelected: () => onFilterChanged(status: status, overdue: null),
+          ),
+        AppFilterChip(
+          label: 'Overdue only',
+          selected: overdueOnly,
+          onSelected: (selected) => onFilterChanged(overdue: selected),
+          activeColor: tokens.danger,
+        ),
+      ],
+    );
+  }
+}
+
+/// A compact list of task rows separated by hairline dividers.
+class _TaskList extends StatelessWidget {
+  const _TaskList({required this.tasks});
+
+  final List<DashboardTask> tasks;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        for (var i = 0; i < tasks.length; i++) ...[
+          if (i > 0) const Divider(height: 1),
+          _TaskRow(task: tasks[i]),
+        ],
+      ],
+    );
+  }
+}
+
+class _TaskRow extends StatelessWidget {
+  const _TaskRow({required this.task});
+
+  final DashboardTask task;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final tokens = context.appColors;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: _StatusIcon(status: task.status),
+          ),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  task.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: textTheme.bodyLarge?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '${task.status.label} · ${task.dueLabel}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: textTheme.bodySmall?.copyWith(color: tokens.textMuted),
+                ),
+                if (task.description?.trim().isNotEmpty ?? false) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    task.description!,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: textTheme.bodySmall?.copyWith(
+                      color: tokens.textMuted,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          if (task.overdue) ...[
+            const SizedBox(width: AppSpacing.sm),
+            _OverdueBadge(),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _StatusIcon extends StatelessWidget {
+  const _StatusIcon({required this.status});
+
+  final DashboardTaskStatus status;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = context.appColors;
+    final (icon, color) = switch (status) {
+      DashboardTaskStatus.todo => (
+        Icons.radio_button_unchecked,
+        tokens.secondary,
+      ),
+      DashboardTaskStatus.inProgress => (
+        Icons.play_circle_outline_rounded,
+        tokens.info,
+      ),
+      DashboardTaskStatus.completed => (
+        Icons.check_circle_outline_rounded,
+        tokens.success,
+      ),
+      DashboardTaskStatus.cancelled => (Icons.block_rounded, tokens.textMuted),
+    };
+    return Semantics(
+      label: status.label,
+      child: Icon(icon, size: 22, color: color),
+    );
+  }
+}
+
+class _OverdueBadge extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final tokens = context.appColors;
+    return Semantics(
+      label: 'Overdue',
+      // The inner label text stays visible; excludeSemantics prevents a
+      // doubled "Overdue Overdue" announcement for screen readers.
+      excludeSemantics: true,
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.sm,
+          vertical: 2,
+        ),
+        decoration: BoxDecoration(
+          color: tokens.danger.withValues(alpha: 0.12),
+          borderRadius: AppRadius.pillAll,
+        ),
+        child: Text(
+          'Overdue',
+          style: Theme.of(context).textTheme.labelSmall
+              ?.copyWith(color: tokens.danger, fontWeight: FontWeight.w600),
+        ),
+      ),
+    );
+  }
+}
+
+class _CountBadge extends StatelessWidget {
+  const _CountBadge({
+    required this.count,
+    required this.background,
+    required this.foreground,
+  });
+
+  final int count;
+  final Color background;
+  final Color foreground;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm + 2,
+        vertical: 2,
+      ),
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: AppRadius.pillAll,
+      ),
+      child: Text(
+        '$count',
+        style: Theme.of(context).textTheme.labelMedium
+            ?.copyWith(color: foreground, fontWeight: FontWeight.w700),
+      ),
+    );
+  }
+}
+
+class _SectionHeader extends StatelessWidget {
+  const _SectionHeader({required this.title, this.subtitle});
+
+  final String title;
+  final String? subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final tokens = context.appColors;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(title, style: textTheme.titleMedium),
+        if (subtitle != null) ...[
+          const SizedBox(height: 2),
+          Text(
+            subtitle!,
+            style: textTheme.bodySmall?.copyWith(color: tokens.textMuted),
+          ),
+        ],
+      ],
+    );
+  }
+}

@@ -1,0 +1,35 @@
+# Keep the Flutter Web build context lean; never push local artifacts, IDE
+# metadata or environment files to the Docker daemon during `docker build`.
+# The multi-stage frontend Dockerfile re-runs `flutter pub get` + `flutter
+# build web` itself, so none of these are needed in the context.
+
+# Version control
+.git
+.gitignore
+.dockerignore
+.gitattributes
+
+# Flutter / Dart tooling caches & build outputs (regenerated inside the image)
+build/
+.dart_tool/
+.pub-cache/
+.pub/
+
+# IDE metadata
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+
+# Local env files (never shipped)
+.env
+.env.*
+!.env.example
+
+# Logs & OS junk
+*.log
+logs/
+Thumbs.db
+Desktop.ini
+.DS_Store

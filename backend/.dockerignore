@@ -1,0 +1,36 @@
+# Keep the build context small and exclude anything that should never be sent
+# to the Docker daemon during `docker build` of the backend image.
+#
+# Anything listed here is NOT part of the image (Dockerfiles COPY only what's
+# needed); it also protects the local layer cache from churning when local
+# build/test artifacts change.
+
+# Version control
+.git
+.gitignore
+.dockerignore
+.gitattributes
+
+# Local IDE / editor metadata
+.idea
+.vscode
+*.iml
+*.ipr
+*.iws
+
+# Local environment files (never ship secrets)
+.env
+.env.*
+!.env.example
+
+# Build outputs (rebuilt inside the multi-stage Dockerfile; never copied)
+target/
+.mvn-tmphistory/
+
+# Logs and OS junk
+*.log
+logs/
+*.pid
+Thumbs.db
+Desktop.ini
+.DS_Store

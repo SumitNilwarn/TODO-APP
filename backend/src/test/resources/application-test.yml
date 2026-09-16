@@ -1,0 +1,16 @@
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: validate
+
+  flyway:
+    enabled: true
+
+app:
+  security:
+    jwt:
+      # Long random test-only secret (>= 32 chars) for a strong HS256 key.
+      secret: ${JWT_SECRET:test-only-jwt-secret-at-least-32-characters-long}
+      issuer: ${JWT_ISSUER:todo-app-test}
+      access-token-expiration-seconds: ${JWT_ACCESS_TOKEN_EXPIRATION:900}
+      refresh-token-expiration-seconds: ${JWT_REFRESH_TOKEN_EXPIRATION:3600}
