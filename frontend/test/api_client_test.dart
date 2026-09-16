@@ -216,8 +216,7 @@ void main() {
         await expectLater(
           api.get<Object?>('/stalled-body', dataParser: (d) => d),
           throwsA(
-            isA<ApiException>()
-                .having((e) => e.isTimeout, 'isTimeout', isTrue),
+            isA<ApiException>().having((e) => e.isTimeout, 'isTimeout', isTrue),
           ),
         );
       },
