@@ -3,14 +3,17 @@ spring:
     name: todo-app-backend
 
   datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:todo_app}
-    username: ${DB_USERNAME:todo_app}
-    password: ${DB_PASSWORD:todo_app}
+    # Production runs on the Neon-managed database; its credentials are
+    # provisioned by the Vercel Neon integration (TODO_DB_*). The DB_* entries
+    # remain the local-dev contract (see .env.example) and serve as fallback.
+    url: jdbc:postgresql://${TODO_DB_PGHOST:${DB_HOST:localhost}}:${DB_PORT:5432}/${TODO_DB_PGDATABASE:${DB_NAME:todo_app}}?sslmode=${DB_SSLMODE:prefer}
+    username: ${TODO_DB_PGUSER:${DB_USERNAME:todo_app}}
+    password: ${TODO_DB_PGPASSWORD:${DB_PASSWORD:todo_app}}
     driver-class-name: org.postgresql.Driver
     hikari:
       pool-name: TodoAppHikariPool
-      maximum-pool-size: 10
-      minimum-idle: 2
+      maximum-pool-size: 5
+      minimum-idle: 1
       connection-timeout: 30000
 
   jpa:
