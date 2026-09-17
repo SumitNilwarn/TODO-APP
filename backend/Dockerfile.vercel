@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1
+﻿# syntax=docker/dockerfile:1
 
 FROM maven:3.9-eclipse-temurin-21 AS build
 
@@ -25,6 +25,6 @@ RUN chown -R todo:todo /app
 
 USER todo:todo
 
-ENV SERVER_PORT=${PORT:-8080}
+EXPOSE 8080
 
-ENTRYPOINT ["java", "-jar", "/app/app.jar"]
+ENTRYPOINT ["sh", "-c", "exec java -jar /app/app.jar --server.port=${PORT:-8080}"]
