@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
+
 /// Build-time configuration for the Todo App client.
 ///
 /// Values are injected at build/run time via Dart defines so that environment
@@ -13,10 +15,25 @@
 /// stay server-side. This config is for public, non-sensitive values only.
 abstract final class AppConfig {
   /// Base URL of the backend REST API.
-  static const String apiBaseUrl = String.fromEnvironment(
-    'API_BASE_URL',
-    defaultValue: 'http://localhost:8080',
-  );
+  ///
+  /// Resolved in priority order:
+  ///  1. an explicit `--dart-define=API_BASE_URL=...`, used for local
+  ///     development where the backend lives on a separate origin;
+  ///  2. on Flutter Web, the page's own origin — platforms that reverse-proxy
+  ///     `/api/*` to a backend service on the same domain (Vercel Services,
+  ///     nginx) need no domain baked in, so a single build works for every
+  ///     deployment (production, preview, custom domain) without rebuilding;
+  ///  3. fallback for tests / desktop: `http://localhost:8080`.
+  static String get apiBaseUrl {
+    const defined = String.fromEnvironment('API_BASE_URL');
+    if (defined.trim().isNotEmpty) {
+      return defined;
+    }
+    if (kIsWeb) {
+      return Uri.base.origin;
+    }
+    return 'http://localhost:8080';
+  }
 
   /// Logical environment name injected at build time.
   ///
