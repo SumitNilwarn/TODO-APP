@@ -10,8 +10,9 @@ import '../../../shared/widgets/app_card.dart';
 import '../../../shared/widgets/app_chip.dart';
 import '../../../shared/widgets/app_empty_state.dart';
 import '../../../shared/widgets/app_error_state.dart';
-import '../../../shared/widgets/app_loading.dart';
 import '../../../shared/widgets/app_snackbar.dart';
+import '../../../shared/widgets/motion/app_skeleton.dart';
+import '../../../shared/widgets/motion/fade_entrance.dart';
 import '../../../shared/widgets/responsive_container.dart';
 import '../../auth/presentation/app_scope.dart';
 import '../../auth/presentation/authenticated_scaffold.dart';
@@ -209,7 +210,7 @@ class _DashboardPageState extends State<DashboardPage> {
 
   Widget _buildBody(BuildContext context) {
     if (_loading) {
-      return const AppLoading(label: 'Loading your dashboard…');
+      return const DashboardSkeleton();
     }
     if (_loadError != null) {
       return Center(
@@ -217,10 +218,13 @@ class _DashboardPageState extends State<DashboardPage> {
           padding: const EdgeInsets.all(AppSpacing.giant),
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 480),
-            child: AppErrorState(
-              title: 'Could not load your dashboard',
-              message: _loadError,
-              onRetry: _loadInitial,
+            child: FadeEntrance(
+              duration: const Duration(milliseconds: 380),
+              child: AppErrorState(
+                title: 'Could not load your dashboard',
+                message: _loadError,
+                onRetry: _loadInitial,
+              ),
             ),
           ),
         ),
@@ -235,19 +239,31 @@ class _DashboardPageState extends State<DashboardPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _MetricTiles(summary: summary),
+            FadeEntrance(child: _MetricTiles(summary: summary)),
             const SizedBox(height: AppSpacing.lg),
-            _StatusBreakdown(summary: summary),
+            FadeEntrance(
+              delay: const Duration(milliseconds: 120),
+              duration: const Duration(milliseconds: 420),
+              child: _StatusBreakdown(summary: summary),
+            ),
             const SizedBox(height: AppSpacing.lg),
-            _OverdueSection(tasks: _overdueTasks),
+            FadeEntrance(
+              delay: const Duration(milliseconds: 190),
+              duration: const Duration(milliseconds: 420),
+              child: _OverdueSection(tasks: _overdueTasks),
+            ),
             const SizedBox(height: AppSpacing.lg),
-            _TasksSection(
-              recent: _recentTasks,
-              upcoming: _upcomingTasks,
-              statusFilter: _statusFilter,
-              overdueOnly: _overdueOnly,
-              refreshing: _refreshing,
-              onFilterChanged: _applyFilter,
+            FadeEntrance(
+              delay: const Duration(milliseconds: 260),
+              duration: const Duration(milliseconds: 440),
+              child: _TasksSection(
+                recent: _recentTasks,
+                upcoming: _upcomingTasks,
+                statusFilter: _statusFilter,
+                overdueOnly: _overdueOnly,
+                refreshing: _refreshing,
+                onFilterChanged: _applyFilter,
+              ),
             ),
           ],
         ),
@@ -378,7 +394,13 @@ class _MetricTiles extends StatelessWidget {
           spacing: AppSpacing.md,
           runSpacing: AppSpacing.md,
           children: [
-            for (final tile in tiles) SizedBox(width: tileWidth, child: tile),
+            for (var i = 0; i < tiles.length; i++)
+              FadeEntrance(
+                delay: Duration(milliseconds: (i * 32).clamp(0, 320)),
+                duration: const Duration(milliseconds: 360),
+                offset: const Offset(0, 10),
+                child: SizedBox(width: tileWidth, child: tiles[i]),
+              ),
           ],
         );
       },
@@ -745,6 +767,10 @@ class _FilterControls extends StatelessWidget {
 }
 
 /// A compact list of task rows separated by hairline dividers.
+///
+/// The content cross-fades when the underlying data set changes (filter
+/// applied, refresh landed), so rows never pop in/out abruptly. Changing back
+/// to an identical set produces no visible motion.
 class _TaskList extends StatelessWidget {
   const _TaskList({required this.tasks});
 
@@ -752,13 +778,32 @@ class _TaskList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        for (var i = 0; i < tasks.length; i++) ...[
-          if (i > 0) const Divider(height: 1),
-          _TaskRow(task: tasks[i]),
-        ],
-      ],
+    final signature = tasks.map((t) => t.id).join(',');
+    return AnimatedSwitcher(
+      duration: AppDurations.normal,
+      switchInCurve: AppCurves.enter,
+      switchOutCurve: AppCurves.exit,
+      transitionBuilder: (child, animation) => FadeTransition(
+        opacity: animation,
+        child: SlideTransition(
+          position: Tween<Offset>(
+            begin: const Offset(0, 0.012),
+            end: Offset.zero,
+          ).animate(animation),
+          child: child,
+        ),
+      ),
+      child: KeyedSubtree(
+        key: ValueKey(signature),
+        child: Column(
+          children: [
+            for (var i = 0; i < tasks.length; i++) ...[
+              if (i > 0) const Divider(height: 1),
+              _TaskRow(task: tasks[i]),
+            ],
+          ],
+        ),
+      ),
     );
   }
 }

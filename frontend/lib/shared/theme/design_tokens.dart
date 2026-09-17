@@ -167,8 +167,41 @@ abstract final class AppShadows {
 }
 
 /// Micro-interaction durations.
+///
+/// Every animation in the app derives from these tokens: fast hovers/scales,
+/// normal cross-fades, slow larger entrances, `page` route transitions and
+/// `micro` pressed-state feedback.
 abstract final class AppDurations {
+  /// Pressed feedback, tiny state toggles (100ms).
+  static const Duration micro = Duration(milliseconds: 100);
+
+  /// Hover states, focus rings, subtle decorations (150ms).
   static const Duration fast = Duration(milliseconds: 150);
+
+  /// Cross-fades, list content swaps, card elevation (250ms).
   static const Duration normal = Duration(milliseconds: 250);
+
+  /// Staggered entrances and larger reveals (400ms).
   static const Duration slow = Duration(milliseconds: 400);
+
+  /// Route page transitions (280ms).
+  static const Duration page = Duration(milliseconds: 280);
+}
+
+/// Easing curves for the motion language.
+///
+/// Curves stay restrained and consistent — no bouncy springs or exaggerated
+/// overshoot — so the interface feels calm, premium and predictable.
+abstract final class AppCurves {
+  /// Default easing for most transitions (gently decelerating).
+  static const Curve standard = Curves.easeOutCubic;
+
+  /// Entrance/positioning animations — content arrives with confidence.
+  static const Curve enter = Curves.easeOutCubic;
+
+  /// Exit animations resolve quickly and quietly.
+  static const Curve exit = Curves.easeInCubic;
+
+  /// Sharp deceleration for anything leaving the screen.
+  static const Curve decelerate = Curves.easeOutExpo;
 }

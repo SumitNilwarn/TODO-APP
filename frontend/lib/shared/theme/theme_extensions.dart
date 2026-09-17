@@ -7,8 +7,8 @@ import 'app_colors.dart';
 /// hardcoding constants.
 ///
 /// Components read colors via the `context.appColors` shortcut; the static
-/// [AppColors] class remains the single source of truth for token values and
-/// is used by the theme itself.
+/// [AppColors] / [AppColorsDark] classes remain the single source of truth for
+/// token values and are used by the theme itself.
 @immutable
 class AppThemeTokens extends ThemeExtension<AppThemeTokens> {
   const AppThemeTokens({
@@ -20,12 +20,14 @@ class AppThemeTokens extends ThemeExtension<AppThemeTokens> {
     required this.onPrimary,
     required this.primaryContainer,
     required this.secondary,
+    required this.onSecondary,
     required this.secondaryContainer,
     required this.onSecondaryContainer,
     required this.textPrimary,
     required this.textSecondary,
     required this.textMuted,
     required this.border,
+    required this.subtleBorder,
     required this.divider,
     required this.success,
     required this.warning,
@@ -42,17 +44,42 @@ class AppThemeTokens extends ThemeExtension<AppThemeTokens> {
       onPrimary = AppColors.onPrimary,
       primaryContainer = AppColors.primaryContainer,
       secondary = AppColors.secondary,
+      onSecondary = AppColors.onSecondary,
       secondaryContainer = AppColors.secondaryContainer,
       onSecondaryContainer = AppColors.onSecondaryContainer,
       textPrimary = AppColors.textPrimary,
       textSecondary = AppColors.textSecondary,
       textMuted = AppColors.textMuted,
       border = AppColors.border,
+      subtleBorder = AppColors.subtleBorder,
       divider = AppColors.divider,
       success = AppColors.success,
       warning = AppColors.warning,
       danger = AppColors.danger,
       info = AppColors.info;
+
+  const AppThemeTokens.dark()
+    : background = AppColorsDark.background,
+      surface = AppColorsDark.surface,
+      surfaceElevated = AppColorsDark.surfaceElevated,
+      surfaceAlt = AppColorsDark.surfaceAlt,
+      primary = AppColorsDark.primary,
+      onPrimary = AppColorsDark.onPrimary,
+      primaryContainer = AppColorsDark.primaryContainer,
+      secondary = AppColorsDark.secondary,
+      onSecondary = AppColorsDark.onSecondary,
+      secondaryContainer = AppColorsDark.secondaryContainer,
+      onSecondaryContainer = AppColorsDark.onSecondaryContainer,
+      textPrimary = AppColorsDark.textPrimary,
+      textSecondary = AppColorsDark.textSecondary,
+      textMuted = AppColorsDark.textMuted,
+      border = AppColorsDark.border,
+      subtleBorder = AppColorsDark.subtleBorder,
+      divider = AppColorsDark.divider,
+      success = AppColorsDark.success,
+      warning = AppColorsDark.warning,
+      danger = AppColorsDark.danger,
+      info = AppColorsDark.info;
 
   final Color background;
   final Color surface;
@@ -62,12 +89,14 @@ class AppThemeTokens extends ThemeExtension<AppThemeTokens> {
   final Color onPrimary;
   final Color primaryContainer;
   final Color secondary;
+  final Color onSecondary;
   final Color secondaryContainer;
   final Color onSecondaryContainer;
   final Color textPrimary;
   final Color textSecondary;
   final Color textMuted;
   final Color border;
+  final Color subtleBorder;
   final Color divider;
   final Color success;
   final Color warning;
@@ -84,12 +113,14 @@ class AppThemeTokens extends ThemeExtension<AppThemeTokens> {
     Color? onPrimary,
     Color? primaryContainer,
     Color? secondary,
+    Color? onSecondary,
     Color? secondaryContainer,
     Color? onSecondaryContainer,
     Color? textPrimary,
     Color? textSecondary,
     Color? textMuted,
     Color? border,
+    Color? subtleBorder,
     Color? divider,
     Color? success,
     Color? warning,
@@ -105,12 +136,14 @@ class AppThemeTokens extends ThemeExtension<AppThemeTokens> {
       onPrimary: onPrimary ?? this.onPrimary,
       primaryContainer: primaryContainer ?? this.primaryContainer,
       secondary: secondary ?? this.secondary,
+      onSecondary: onSecondary ?? this.onSecondary,
       secondaryContainer: secondaryContainer ?? this.secondaryContainer,
       onSecondaryContainer: onSecondaryContainer ?? this.onSecondaryContainer,
       textPrimary: textPrimary ?? this.textPrimary,
       textSecondary: textSecondary ?? this.textSecondary,
       textMuted: textMuted ?? this.textMuted,
       border: border ?? this.border,
+      subtleBorder: subtleBorder ?? this.subtleBorder,
       divider: divider ?? this.divider,
       success: success ?? this.success,
       warning: warning ?? this.warning,
@@ -135,6 +168,7 @@ class AppThemeTokens extends ThemeExtension<AppThemeTokens> {
         t,
       )!,
       secondary: Color.lerp(secondary, other.secondary, t)!,
+      onSecondary: Color.lerp(onSecondary, other.onSecondary, t)!,
       secondaryContainer: Color.lerp(
         secondaryContainer,
         other.secondaryContainer,
@@ -149,6 +183,7 @@ class AppThemeTokens extends ThemeExtension<AppThemeTokens> {
       textSecondary: Color.lerp(textSecondary, other.textSecondary, t)!,
       textMuted: Color.lerp(textMuted, other.textMuted, t)!,
       border: Color.lerp(border, other.border, t)!,
+      subtleBorder: Color.lerp(subtleBorder, other.subtleBorder, t)!,
       divider: Color.lerp(divider, other.divider, t)!,
       success: Color.lerp(success, other.success, t)!,
       warning: Color.lerp(warning, other.warning, t)!,
@@ -169,12 +204,14 @@ class AppThemeTokens extends ThemeExtension<AppThemeTokens> {
             onPrimary == other.onPrimary &&
             primaryContainer == other.primaryContainer &&
             secondary == other.secondary &&
+            onSecondary == other.onSecondary &&
             secondaryContainer == other.secondaryContainer &&
             onSecondaryContainer == other.onSecondaryContainer &&
             textPrimary == other.textPrimary &&
             textSecondary == other.textSecondary &&
             textMuted == other.textMuted &&
             border == other.border &&
+            subtleBorder == other.subtleBorder &&
             divider == other.divider &&
             success == other.success &&
             warning == other.warning &&
@@ -184,7 +221,7 @@ class AppThemeTokens extends ThemeExtension<AppThemeTokens> {
 
   @override
   int get hashCode {
-    return Object.hash(
+    return Object.hashAll([
       background,
       surface,
       surfaceElevated,
@@ -193,18 +230,20 @@ class AppThemeTokens extends ThemeExtension<AppThemeTokens> {
       onPrimary,
       primaryContainer,
       secondary,
+      onSecondary,
       secondaryContainer,
       onSecondaryContainer,
       textPrimary,
       textSecondary,
       textMuted,
       border,
+      subtleBorder,
       divider,
       success,
       warning,
       danger,
       info,
-    );
+    ]);
   }
 }
 

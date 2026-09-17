@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../theme/app_colors.dart';
 import '../theme/design_tokens.dart';
+import '../theme/theme_extensions.dart';
 
 /// Calm, centered placeholder for "nothing to show yet".
 ///
@@ -26,6 +26,7 @@ class AppEmptyState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final tokens = context.appColors;
     return Semantics(
       container: true,
       label: message == null ? title : '$title. $message',
@@ -39,10 +40,10 @@ class AppEmptyState extends StatelessWidget {
               height: 64,
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                color: AppColors.surfaceAlt,
+                color: tokens.surfaceAlt,
                 borderRadius: AppRadius.xxlAll,
               ),
-              child: Icon(icon, size: 30, color: AppColors.muted),
+              child: Icon(icon, size: 30, color: tokens.textMuted),
             ),
           ),
           const SizedBox(height: AppSpacing.md),
@@ -55,7 +56,7 @@ class AppEmptyState extends StatelessWidget {
             const SizedBox(height: AppSpacing.sm),
             Text(
               message!,
-              style: textTheme.bodyMedium?.copyWith(color: AppColors.muted),
+              style: textTheme.bodyMedium?.copyWith(color: tokens.textMuted),
               textAlign: TextAlign.center,
             ),
           ],

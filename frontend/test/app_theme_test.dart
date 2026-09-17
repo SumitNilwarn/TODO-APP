@@ -77,4 +77,37 @@ void main() {
     expect(theme.chipTheme.shape, isNotNull);
     expect(theme.progressIndicatorTheme.color, AppColors.ink);
   });
+
+  test('AppTheme.dark exposes a coherent hierarchy and tokens', () {
+    final theme = AppTheme.dark();
+
+    expect(theme.brightness, Brightness.dark);
+    expect(theme.scaffoldBackgroundColor, AppColorsDark.background);
+
+    // Type renders on the near-white ink surface, inverted from light mode.
+    expect(theme.textTheme.headlineMedium?.fontSize, 30);
+    expect(theme.textTheme.headlineMedium?.fontWeight, FontWeight.w700);
+    expect(theme.textTheme.bodySmall?.color, AppColorsDark.textMuted);
+
+    // Semantic roles resolve to the dark palette.
+    final tokens = theme.extension<AppThemeTokens>();
+    expect(tokens, isNotNull);
+    expect(tokens!.primary, AppColorsDark.primary);
+    expect(tokens.onPrimary, AppColorsDark.onPrimary);
+    expect(tokens.background, AppColorsDark.background);
+    expect(tokens.surface, AppColorsDark.surface);
+    expect(tokens.textPrimary, AppColorsDark.textPrimary);
+    expect(tokens.danger, AppColorsDark.danger);
+
+    // Component themes are wired through ThemeData.
+    expect(theme.colorScheme.primary, AppColorsDark.primary);
+    expect(theme.colorScheme.error, AppColorsDark.danger);
+    expect(theme.appBarTheme.backgroundColor, AppColorsDark.background);
+    expect(theme.cardTheme.color, AppColorsDark.surface);
+    expect(theme.dialogTheme.backgroundColor, AppColorsDark.surface);
+
+    // The primary CTA and ink surface invert cleanly in dark mode.
+    final filledStyle = theme.filledButtonTheme.style;
+    expect(filledStyle, isNotNull);
+  });
 }

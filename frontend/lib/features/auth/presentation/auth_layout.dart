@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../shared/theme/design_tokens.dart';
 import '../../../shared/theme/theme_extensions.dart';
 import '../../../shared/widgets/app_inline_alert.dart';
+import '../../../shared/widgets/motion/fade_entrance.dart';
 
 /// Shared centered-card layout for the public auth screens (sign in, create
 /// account). Keeps branding, width constraints and the page background
@@ -37,23 +38,41 @@ class AuthPageLayout extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const _BrandMark(),
+                  const FadeEntrance(
+                    offset: Offset(0, 8),
+                    duration: Duration(milliseconds: 380),
+                    child: _BrandMark(),
+                  ),
                   const SizedBox(height: AppSpacing.lg),
-                  Text(
-                    title,
-                    style: textTheme.headlineMedium,
-                    textAlign: TextAlign.center,
+                  FadeEntrance(
+                    delay: const Duration(milliseconds: 80),
+                    offset: const Offset(0, 8),
+                    child: Text(
+                      title,
+                      style: textTheme.headlineMedium,
+                      textAlign: TextAlign.center,
+                    ),
                   ),
                   const SizedBox(height: AppSpacing.xs),
-                  Text(
-                    subtitle,
-                    style: textTheme.bodyLarge?.copyWith(
-                      color: context.appColors.textMuted,
+                  FadeEntrance(
+                    delay: const Duration(milliseconds: 140),
+                    offset: const Offset(0, 8),
+                    child: Text(
+                      subtitle,
+                      style: textTheme.bodyLarge?.copyWith(
+                        color: context.appColors.textMuted,
+                      ),
+                      textAlign: TextAlign.center,
                     ),
-                    textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: AppSpacing.lg),
-                  ...children,
+                  for (final child in children)
+                    FadeEntrance(
+                      delay: const Duration(milliseconds: 220),
+                      duration: const Duration(milliseconds: 400),
+                      offset: const Offset(0, 12),
+                      child: child,
+                    ),
                 ],
               ),
             ),
@@ -79,7 +98,7 @@ class _BrandMark extends StatelessWidget {
           color: tokens.primary,
           borderRadius: AppRadius.lgAll,
         ),
-        child: const Icon(Icons.check_rounded, color: Colors.white, size: 26),
+        child: const Icon(Icons.check_rounded, size: 26),
       ),
     );
   }

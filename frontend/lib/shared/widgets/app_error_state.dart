@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../theme/app_colors.dart';
 import '../theme/design_tokens.dart';
+import '../theme/theme_extensions.dart';
 import 'app_button.dart';
 
 /// Friendly full-state placeholder when something goes wrong.
@@ -27,6 +27,7 @@ class AppErrorState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final tokens = context.appColors;
     return Semantics(
       container: true,
       label: message == null ? title : '$title. $message',
@@ -34,7 +35,7 @@ class AppErrorState extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _StateIcon(icon: icon, color: AppColors.danger),
+          _StateIcon(icon: icon, color: tokens.danger),
           const SizedBox(height: AppSpacing.md),
           Text(
             title,
@@ -45,7 +46,7 @@ class AppErrorState extends StatelessWidget {
             const SizedBox(height: AppSpacing.sm),
             Text(
               message!,
-              style: textTheme.bodyMedium?.copyWith(color: AppColors.muted),
+              style: textTheme.bodyMedium?.copyWith(color: tokens.textMuted),
               textAlign: TextAlign.center,
             ),
           ],
@@ -79,7 +80,7 @@ class _StateIcon extends StatelessWidget {
         height: 64,
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: AppColors.surfaceAlt,
+          color: context.appColors.surfaceAlt,
           borderRadius: AppRadius.xxlAll,
         ),
         child: Icon(icon, size: 30, color: color),

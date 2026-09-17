@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../../core/constants/app_constants.dart';
-import '../theme/app_colors.dart';
 import '../theme/design_tokens.dart';
 import '../theme/theme_extensions.dart';
 
@@ -90,14 +89,17 @@ class AppButton extends StatelessWidget {
     final button = tooltip == null
         ? baseButton
         : Tooltip(message: tooltip!, child: baseButton);
+    // A barely-there press-down scale gives every CTA physical feedback while
+    // staying well inside the Material tap-target.
+    final pressScale = _PressScale(enabled: !isDisabled, child: button);
 
     return Semantics(
       button: true,
       enabled: !isDisabled,
       label: loading ? '$label, ${AppConstants.appName} — loading' : label,
       child: expanded
-          ? SizedBox(width: double.infinity, child: button)
-          : button,
+          ? SizedBox(width: double.infinity, child: pressScale)
+          : pressScale,
     );
   }
 
@@ -152,10 +154,10 @@ class AppButton extends StatelessWidget {
   Widget _buildContent(BuildContext context) {
     if (loading) {
       final color = switch (variant) {
-        AppButtonVariant.primary => AppColors.onInk,
+        AppButtonVariant.primary => context.appColors.onPrimary,
         AppButtonVariant.secondary => context.appColors.onSecondaryContainer,
         AppButtonVariant.destructive => context.appColors.danger,
-        _ => AppColors.ink,
+        _ => context.appColors.primary,
       };
       return SizedBox(
         width: AppSizes.buttonSpinner,
@@ -185,5 +187,43 @@ class AppButton extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+/// A faint press-down scale applied while the pointer is held inside a button.
+class _PressScale extends StatefulWidget {
+  const _PressScale({required this.enabled, required this.child});
+
+  final bool enabled;
+  final Widget child;
+
+  @override
+  State<_PressScale> createState() => _PressScaleState();
+}
+
+class _PressScaleState extends State<_PressScale> {
+  bool _down = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final enabled =
+        widget.enabled &&
+        !(MediaQuery.maybeOf(context)?.disableAnimations ?? false);
+    return Listener(
+      onPointerDown: enabled ? (_) => _setDown(true) : null,
+      onPointerUp: enabled ? (_) => _setDown(false) : null,
+      onPointerCancel: enabled ? (_) => _setDown(false) : null,
+      child: AnimatedScale(
+        scale: _down ? 0.98 : 1.0,
+        duration: AppDurations.micro,
+        curve: AppCurves.standard,
+        child: widget.child,
+      ),
+    );
+  }
+
+  void _setDown(bool value) {
+    if (_down == value) return;
+    setState(() => _down = value);
   }
 }

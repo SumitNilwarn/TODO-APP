@@ -167,10 +167,8 @@ class _SidebarItem extends StatelessWidget {
     final tokens = context.appColors;
     final textTheme = Theme.of(context).textTheme;
 
-    final background = selected
-        ? tokens.secondaryContainer
-        : Colors.transparent;
-    final fg = selected ? tokens.onSecondaryContainer : tokens.textSecondary;
+    final background = selected ? tokens.surfaceAlt : Colors.transparent;
+    final fg = selected ? tokens.textPrimary : tokens.textSecondary;
     final labelStyle = textTheme.labelMedium?.copyWith(color: fg);
     final icon = (selected && item.selectedIcon != null)
         ? item.selectedIcon!
@@ -200,6 +198,7 @@ class _SidebarItem extends StatelessWidget {
         }),
         child: AnimatedContainer(
           duration: AppDurations.fast,
+          curve: AppCurves.enter,
           height: AppSizes.navItemHeight,
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
           decoration: BoxDecoration(
@@ -208,6 +207,18 @@ class _SidebarItem extends StatelessWidget {
           ),
           child: Row(
             children: [
+              // A quiet three-point accent bar marks the active destination.
+              if (selected) ...[
+                Container(
+                  width: 3,
+                  height: 20,
+                  decoration: BoxDecoration(
+                    color: tokens.primary,
+                    borderRadius: AppRadius.pillAll,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm + 3),
+              ],
               Icon(icon, size: 20, color: fg),
               const SizedBox(width: AppSpacing.md),
               Flexible(child: Text(item.label, style: labelStyle, maxLines: 1)),

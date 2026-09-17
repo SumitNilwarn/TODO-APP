@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:todo_app/app.dart';
 import 'package:todo_app/features/auth/presentation/auth_state.dart';
-import 'package:todo_app/shared/widgets/app_loading.dart';
+import 'package:todo_app/shared/widgets/motion/app_skeleton.dart';
 
 import '../../support/mock_api.dart';
 
@@ -66,11 +66,10 @@ void main() {
         TodoApp(initialRoute: '/dashboard', authState: auth),
       );
 
-      expect(find.byType(AppLoading), findsOneWidget);
-      expect(find.text('Loading your dashboard…'), findsOneWidget);
+      expect(find.byType(DashboardSkeleton), findsWidgets);
 
       await tester.pumpAndSettle();
-      expect(find.byType(AppLoading), findsNothing);
+      expect(find.byType(DashboardSkeleton), findsNothing);
     });
 
     testWidgets('renders metrics, status bars, overdue and task previews', (

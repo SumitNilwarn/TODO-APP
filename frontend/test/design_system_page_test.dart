@@ -76,7 +76,7 @@ void main() {
     expect(find.text('displayLarge'), findsOneWidget);
     // Exact swatch value (8-digit ARGB) for the current ink token
     // (shared by `primary` and `textPrimary`).
-    expect(find.text('ff191919'), findsWidgets);
+    expect(find.text('ff17171b'), findsWidgets);
     expect(find.textContaining('neutral'), findsWidgets);
     expect(find.byType(AppLoading), findsWidgets);
     expect(find.byType(AppEmptyState), findsWidgets);

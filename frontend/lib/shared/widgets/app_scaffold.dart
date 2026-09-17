@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../theme/app_colors.dart';
+import '../theme/theme_extensions.dart';
 import 'responsive_container.dart';
 
 /// Standard page shell: consistent app bar, background and body layout.
@@ -35,7 +35,7 @@ class AppScaffold extends StatelessWidget {
     return Scaffold(
       appBar: hasAppBar
           ? AppBar(
-              backgroundColor: AppColors.background,
+              backgroundColor: context.appColors.background,
               leading: leading,
               title: title == null ? null : Text(title!),
               actions: actions,

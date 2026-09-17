@@ -16,15 +16,31 @@ import 'app_colors.dart';
 /// - captions / metadata    → `bodySmall`
 /// - labels & navigation    → `labelLarge`, `labelMedium`, `labelSmall`
 abstract final class AppTypography {
-  static TextTheme light() {
-    return const TextTheme(
+  /// Light-mode text hierarchy.
+  static TextTheme light() => _textTheme(
+    textPrimaryColor: AppColors.textPrimary,
+    textMutedColor: AppColors.textMuted,
+  );
+
+  /// Dark-mode text hierarchy — identical sizing/weight ladder, mapped onto
+  /// the dark palette so headings and body copy stay equally legible.
+  static TextTheme dark() => _textTheme(
+    textPrimaryColor: AppColorsDark.textPrimary,
+    textMutedColor: AppColorsDark.textMuted,
+  );
+
+  static TextTheme _textTheme({
+    required Color textPrimaryColor,
+    required Color textMutedColor,
+  }) {
+    return TextTheme(
       /// Hero / landing / brand display text.
       displayLarge: TextStyle(
         fontSize: 40,
         height: 1.15,
         fontWeight: FontWeight.w700,
         letterSpacing: -0.8,
-        color: AppColors.textPrimary,
+        color: textPrimaryColor,
       ),
 
       /// Large page titles — the single dominant heading of a screen.
@@ -33,7 +49,7 @@ abstract final class AppTypography {
         height: 1.2,
         fontWeight: FontWeight.w700,
         letterSpacing: -0.5,
-        color: AppColors.textPrimary,
+        color: textPrimaryColor,
       ),
 
       /// Page titles (kept for compatibility) — dominant heading of a screen.
@@ -42,7 +58,7 @@ abstract final class AppTypography {
         height: 1.2,
         fontWeight: FontWeight.w700,
         letterSpacing: -0.5,
-        color: AppColors.textPrimary,
+        color: textPrimaryColor,
       ),
 
       /// Sub-section emphasis within a page.
@@ -51,7 +67,7 @@ abstract final class AppTypography {
         height: 1.3,
         fontWeight: FontWeight.w600,
         letterSpacing: -0.2,
-        color: AppColors.textPrimary,
+        color: textPrimaryColor,
       ),
 
       /// Section titles within a page.
@@ -59,7 +75,7 @@ abstract final class AppTypography {
         fontSize: 20,
         height: 1.3,
         fontWeight: FontWeight.w600,
-        color: AppColors.textPrimary,
+        color: textPrimaryColor,
       ),
 
       /// Card / subsection headers.
@@ -67,7 +83,7 @@ abstract final class AppTypography {
         fontSize: 17,
         height: 1.4,
         fontWeight: FontWeight.w600,
-        color: AppColors.textPrimary,
+        color: textPrimaryColor,
       ),
 
       /// Compact sub-headers and list-item titles.
@@ -75,29 +91,17 @@ abstract final class AppTypography {
         fontSize: 15,
         height: 1.4,
         fontWeight: FontWeight.w600,
-        color: AppColors.textPrimary,
+        color: textPrimaryColor,
       ),
 
       /// Primary body text.
-      bodyLarge: TextStyle(
-        fontSize: 17,
-        height: 1.5,
-        color: AppColors.textPrimary,
-      ),
+      bodyLarge: TextStyle(fontSize: 17, height: 1.5, color: textPrimaryColor),
 
       /// Secondary body text.
-      bodyMedium: TextStyle(
-        fontSize: 15,
-        height: 1.5,
-        color: AppColors.textPrimary,
-      ),
+      bodyMedium: TextStyle(fontSize: 15, height: 1.5, color: textPrimaryColor),
 
       /// Helper text, metadata and captions.
-      bodySmall: TextStyle(
-        fontSize: 13,
-        height: 1.4,
-        color: AppColors.textMuted,
-      ),
+      bodySmall: TextStyle(fontSize: 13, height: 1.4, color: textMutedColor),
 
       /// Emphasized action labels (buttons).
       labelLarge: TextStyle(
@@ -105,7 +109,7 @@ abstract final class AppTypography {
         height: 1.4,
         fontWeight: FontWeight.w600,
         letterSpacing: 0.1,
-        color: AppColors.textPrimary,
+        color: textPrimaryColor,
       ),
 
       /// Input labels and compact action labels.
@@ -114,7 +118,7 @@ abstract final class AppTypography {
         height: 1.4,
         fontWeight: FontWeight.w600,
         letterSpacing: 0.1,
-        color: AppColors.textPrimary,
+        color: textPrimaryColor,
       ),
 
       /// Legal/copyright microtext.
@@ -123,7 +127,7 @@ abstract final class AppTypography {
         height: 1.4,
         fontWeight: FontWeight.w600,
         letterSpacing: 0.2,
-        color: AppColors.textMuted,
+        color: textMutedColor,
       ),
     );
   }

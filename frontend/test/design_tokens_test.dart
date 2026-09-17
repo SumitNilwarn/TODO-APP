@@ -101,10 +101,10 @@ void main() {
     });
 
     test('surfaces and borders are calm neutrals', () {
-      expect(AppColors.background, const Color(0xFFF6F5F2));
+      expect(AppColors.background, const Color(0xFFF7F7F8));
       expect(AppColors.surface, Colors.white);
       expect(AppColors.surfaceElevated, isNot(AppColors.surface));
-      expect(AppColors.border, const Color(0xFFEAE8E2));
+      expect(AppColors.border, const Color(0xFFE4E4E8));
     });
   });
 }

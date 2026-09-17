@@ -7,6 +7,7 @@ import '../../../shared/theme/design_tokens.dart';
 import '../../../shared/theme/theme_extensions.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_card.dart';
+import '../../../shared/widgets/motion/fade_entrance.dart';
 import '../../../shared/widgets/responsive_container.dart';
 import '../../auth/presentation/app_scope.dart';
 import '../../auth/domain/auth_models.dart';
@@ -40,89 +41,106 @@ class HomePage extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const _AppMark(),
+                  const FadeEntrance(
+                    offset: Offset(0, 10),
+                    duration: Duration(milliseconds: 420),
+                    child: _AppMark(),
+                  ),
                   const SizedBox(height: AppSpacing.lg),
-                  Text(
-                    'Welcome to ${AppConstants.appName}',
-                    style: textTheme.headlineMedium,
+                  FadeEntrance(
+                    delay: const Duration(milliseconds: 90),
+                    child: Text(
+                      'Welcome to ${AppConstants.appName}',
+                      style: textTheme.headlineMedium,
+                    ),
                   ),
                   const SizedBox(height: AppSpacing.sm),
-                  Text(
-                    AppConstants.tagline,
-                    style: textTheme.bodyLarge?.copyWith(
-                      color: tokens.textMuted,
+                  FadeEntrance(
+                    delay: const Duration(milliseconds: 150),
+                    child: Text(
+                      AppConstants.tagline,
+                      style: textTheme.bodyLarge?.copyWith(
+                        color: tokens.textMuted,
+                      ),
                     ),
                   ),
                   const SizedBox(height: AppSpacing.xl),
-                  AppCard(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          signedIn
-                              ? 'Your workspace'
-                              : 'A calm place to plan your day',
-                          style: textTheme.titleMedium,
-                        ),
-                        const SizedBox(height: AppSpacing.sm),
-                        Text(
-                          signedIn
-                              ? 'You are signed in as '
-                                    '${auth.username ?? "a member"}. Head to the '
-                                    'dashboard to get started, or visit your '
-                                    'profile to personalise your account.'
-                              : 'Sign in to manage your tasks and personalise '
-                                    'your account. Everything is stored securely '
-                                    'behind your profile.',
-                          style: textTheme.bodyMedium?.copyWith(
-                            color: tokens.textMuted,
+                  FadeEntrance(
+                    delay: const Duration(milliseconds: 220),
+                    duration: const Duration(milliseconds: 440),
+                    child: AppCard(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            signedIn
+                                ? 'Your workspace'
+                                : 'A calm place to plan your day',
+                            style: textTheme.titleMedium,
                           ),
-                        ),
-                        const SizedBox(height: AppSpacing.md),
-                        Text(
-                          'API: ${AppConfig.apiBaseUrl}',
-                          style: textTheme.bodyMedium?.copyWith(
-                            color: tokens.textMuted,
-                            fontSize: 13,
-                          ),
-                        ),
-                        const SizedBox(height: AppSpacing.lg),
-                        if (signedIn)
-                          AppButton(
-                            label: 'Open dashboard',
-                            icon: Icons.dashboard_outlined,
-                            expanded: true,
-                            onPressed: () =>
-                                Navigator.of(context)
-                                    .pushReplacementNamed(AppRouter.dashboard),
-                          )
-                        else
-                          AppButton(
-                            label: 'Get started',
-                            icon: Icons.arrow_forward_rounded,
-                            expanded: true,
-                            onPressed: () =>
-                                Navigator.of(context)
-                                    .pushReplacementNamed(AppRouter.login),
-                          ),
-                        if (auth.status == AuthStatus.refreshing) ...[
                           const SizedBox(height: AppSpacing.sm),
                           Text(
-                            'Restoring your session…',
-                            style: textTheme.bodySmall?.copyWith(
+                            signedIn
+                                ? 'You are signed in as '
+                                      '${auth.username ?? "a member"}. Head to the '
+                                      'dashboard to get started, or visit your '
+                                      'profile to personalise your account.'
+                                : 'Sign in to manage your tasks and personalise '
+                                      'your account. Everything is stored securely '
+                                      'behind your profile.',
+                            style: textTheme.bodyMedium?.copyWith(
                               color: tokens.textMuted,
                             ),
                           ),
+                          const SizedBox(height: AppSpacing.md),
+                          Text(
+                            'API: ${AppConfig.apiBaseUrl}',
+                            style: textTheme.bodyMedium?.copyWith(
+                              color: tokens.textMuted,
+                              fontSize: 13,
+                            ),
+                          ),
+                          const SizedBox(height: AppSpacing.lg),
+                          if (signedIn)
+                            AppButton(
+                              label: 'Open dashboard',
+                              icon: Icons.dashboard_outlined,
+                              expanded: true,
+                              onPressed: () => Navigator.of(context)
+                                  .pushReplacementNamed(AppRouter.dashboard),
+                            )
+                          else
+                            AppButton(
+                              label: 'Get started',
+                              icon: Icons.arrow_forward_rounded,
+                              expanded: true,
+                              onPressed: () =>
+                                  Navigator.of(context)
+                                      .pushReplacementNamed(AppRouter.login),
+                            ),
+                          if (auth.status == AuthStatus.refreshing) ...[
+                            const SizedBox(height: AppSpacing.sm),
+                            Text(
+                              'Restoring your session…',
+                              style: textTheme.bodySmall?.copyWith(
+                                color: tokens.textMuted,
+                              ),
+                            ),
+                          ],
                         ],
-                      ],
+                      ),
                     ),
                   ),
                   const SizedBox(height: AppSpacing.md),
-                  Text(
-                    '· Workspace · Tasks · Profile ·',
-                    textAlign: TextAlign.center,
-                    style: textTheme.bodySmall?.copyWith(
-                      color: tokens.textMuted,
+                  FadeEntrance(
+                    delay: const Duration(milliseconds: 320),
+                    duration: const Duration(milliseconds: 380),
+                    child: Text(
+                      '· Workspace · Tasks · Profile ·',
+                      textAlign: TextAlign.center,
+                      style: textTheme.bodySmall?.copyWith(
+                        color: tokens.textMuted,
+                      ),
                     ),
                   ),
                 ],

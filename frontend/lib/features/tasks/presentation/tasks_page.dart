@@ -13,9 +13,10 @@ import '../../../shared/widgets/app_card.dart';
 import '../../../shared/widgets/app_chip.dart';
 import '../../../shared/widgets/app_empty_state.dart';
 import '../../../shared/widgets/app_error_state.dart';
-import '../../../shared/widgets/app_loading.dart';
 import '../../../shared/widgets/app_snackbar.dart';
 import '../../../shared/widgets/app_text_field.dart';
+import '../../../shared/widgets/motion/app_skeleton.dart';
+import '../../../shared/widgets/motion/fade_entrance.dart';
 import '../../../shared/widgets/responsive_container.dart';
 import '../../auth/presentation/app_scope.dart';
 import '../../auth/presentation/authenticated_scaffold.dart';
@@ -307,7 +308,7 @@ class _TasksPageState extends State<TasksPage> {
 
   Widget _buildBody(BuildContext context) {
     if (_loading && _page == null) {
-      return const AppLoading(label: 'Loading your tasks…');
+      return const TasksSkeleton();
     }
 
     final page = _page;
@@ -317,13 +318,16 @@ class _TasksPageState extends State<TasksPage> {
           padding: const EdgeInsets.all(AppSpacing.giant),
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 480),
-            child: AppErrorState(
-              title: 'Could not load your tasks',
-              message: _loadError,
-              onRetry: () {
-                setState(() => _query = _query.copyWith(page: 0));
-                _load();
-              },
+            child: FadeEntrance(
+              duration: const Duration(milliseconds: 380),
+              child: AppErrorState(
+                title: 'Could not load your tasks',
+                message: _loadError,
+                onRetry: () {
+                  setState(() => _query = _query.copyWith(page: 0));
+                  _load();
+                },
+              ),
             ),
           ),
         ),
@@ -331,7 +335,7 @@ class _TasksPageState extends State<TasksPage> {
     }
 
     if (page == null) {
-      return const AppLoading(label: 'Loading your tasks…');
+      return const TasksSkeleton();
     }
 
     if (page.isEmpty) {
@@ -340,7 +344,10 @@ class _TasksPageState extends State<TasksPage> {
           padding: const EdgeInsets.all(AppSpacing.giant),
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 480),
-            child: _buildEmptyState(),
+            child: FadeEntrance(
+              duration: const Duration(milliseconds: 380),
+              child: _buildEmptyState(),
+            ),
           ),
         ),
       );
@@ -360,39 +367,63 @@ class _TasksPageState extends State<TasksPage> {
               onClear: _clearSearch,
             ),
             const SizedBox(height: AppSpacing.md),
-            _TaskControls(
-              query: _query,
-              dateRangeError: _dateRangeError,
-              onStatusChanged: _setStatus,
-              onOverdueChanged: _setOverdue,
-              onSortChanged: _setSort,
-              onDirectionToggled: _toggleDirection,
-              onDateRangeChanged: _setDueDateRange,
-              onClearFilters: _clearFilters,
+            FadeEntrance(
+              delay: const Duration(milliseconds: 90),
+              duration: const Duration(milliseconds: 380),
+              child: _TaskControls(
+                query: _query,
+                dateRangeError: _dateRangeError,
+                onStatusChanged: _setStatus,
+                onOverdueChanged: _setOverdue,
+                onSortChanged: _setSort,
+                onDirectionToggled: _toggleDirection,
+                onDateRangeChanged: _setDueDateRange,
+                onClearFilters: _clearFilters,
+              ),
             ),
             if (_refreshing) ...[
               const SizedBox(height: AppSpacing.md),
               const LinearProgressIndicator(minHeight: 2),
             ],
             const SizedBox(height: AppSpacing.md),
-            AppCard(
-              padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  for (var i = 0; i < page.tasks.length; i++) ...[
-                    if (i > 0)
-                      const Divider(
-                        height: 1,
-                        indent: AppSpacing.lg,
-                        endIndent: AppSpacing.lg,
-                      ),
-                    _TaskListTile(
-                      task: page.tasks[i],
-                      onTap: () => _openDetail(page.tasks[i]),
-                    ),
-                  ],
-                ],
+            // The whole page of tiles cross-fades when the dataset changes
+            // (search/filter/sort/page/create/delete), so rows never pop.
+            AnimatedSwitcher(
+              duration: AppDurations.normal,
+              switchInCurve: AppCurves.enter,
+              switchOutCurve: AppCurves.exit,
+              transitionBuilder: (child, animation) => FadeTransition(
+                opacity: animation,
+                child: SlideTransition(
+                  position: Tween<Offset>(
+                    begin: const Offset(0, 0.012),
+                    end: Offset.zero,
+                  ).animate(animation),
+                  child: child,
+                ),
+              ),
+              child: KeyedSubtree(
+                key: ValueKey(_listSignature(page)),
+                child: AppCard(
+                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      for (var i = 0; i < page.tasks.length; i++) ...[
+                        if (i > 0)
+                          const Divider(
+                            height: 1,
+                            indent: AppSpacing.lg,
+                            endIndent: AppSpacing.lg,
+                          ),
+                        _TaskListTile(
+                          task: page.tasks[i],
+                          onTap: () => _openDetail(page.tasks[i]),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
               ),
             ),
             const SizedBox(height: AppSpacing.md),
@@ -406,6 +437,13 @@ class _TasksPageState extends State<TasksPage> {
         ),
       ),
     );
+  }
+
+  /// Stable identity for the visible list: page number, element count and the
+  /// exact row ids. Identical payloads produce no cross-fade.
+  String _listSignature(TaskPage page) {
+    final ids = page.tasks.map((t) => t.id).join(',');
+    return '${page.pageNumber}|${page.totalElements}|$ids';
   }
 
   Widget _buildEmptyState() {

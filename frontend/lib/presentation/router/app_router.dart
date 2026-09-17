@@ -9,6 +9,7 @@ import '../../features/profile/presentation/profile_page.dart';
 import '../../features/tasks/presentation/task_detail_page.dart';
 import '../../features/tasks/presentation/tasks_page.dart';
 import '../screens/design_system_page.dart';
+import 'app_page_route.dart';
 
 /// Central route table for the app.
 ///
@@ -92,7 +93,7 @@ abstract final class AppRouter {
     };
   }
 
-  static MaterialPageRoute<T> _page<T>(Widget child, RouteSettings settings) {
-    return MaterialPageRoute<T>(builder: (_) => child, settings: settings);
+  static AppPageRoute<T> _page<T>(Widget child, RouteSettings settings) {
+    return AppPageRoute<T>(builder: (_) => child, settings: settings);
   }
 }

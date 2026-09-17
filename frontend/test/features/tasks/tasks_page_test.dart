@@ -7,7 +7,7 @@ import 'package:todo_app/features/auth/presentation/auth_state.dart';
 import 'package:todo_app/features/tasks/domain/task_list_query.dart';
 import 'package:todo_app/features/tasks/domain/task_models.dart';
 import 'package:todo_app/shared/widgets/app_button.dart';
-import 'package:todo_app/shared/widgets/app_loading.dart';
+import 'package:todo_app/shared/widgets/motion/app_skeleton.dart';
 
 import '../../support/mock_api.dart';
 
@@ -101,8 +101,7 @@ void main() {
       await tester.pumpWidget(TodoApp(initialRoute: '/tasks', authState: auth));
       await tester.pump();
 
-      expect(find.byType(AppLoading), findsOneWidget);
-      expect(find.text('Loading your tasks…'), findsOneWidget);
+      expect(find.byType(TasksSkeleton), findsWidgets);
 
       await tester.pumpAndSettle();
     });
