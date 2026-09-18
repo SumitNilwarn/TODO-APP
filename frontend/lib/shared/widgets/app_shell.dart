@@ -22,6 +22,7 @@ class AppShell extends StatelessWidget {
   const AppShell({
     super.key,
     required this.body,
+    this.kicker,
     this.title,
     this.subtitle,
     this.leading,
@@ -35,6 +36,9 @@ class AppShell extends StatelessWidget {
 
   /// Rendered page body (already constrained/scrolled by the caller).
   final Widget body;
+
+  /// Technical micro-label shown above the page title (see [AppPageHeader]).
+  final String? kicker;
 
   /// Page title shown in the header (and compact app bar).
   final String? title;
@@ -99,6 +103,7 @@ class AppShell extends StatelessWidget {
       ),
       body: SafeArea(
         child: _Content(
+          kicker: kicker,
           title: title,
           subtitle: subtitle,
           leading: leading,
@@ -137,6 +142,7 @@ class AppShell extends StatelessWidget {
           Expanded(
             child: SafeArea(
               child: _Content(
+                kicker: kicker,
                 title: title,
                 subtitle: subtitle,
                 leading: leading,
@@ -155,6 +161,7 @@ class AppShell extends StatelessWidget {
 class _Content extends StatelessWidget {
   const _Content({
     required this.body,
+    this.kicker,
     this.title,
     this.subtitle,
     this.leading,
@@ -163,6 +170,7 @@ class _Content extends StatelessWidget {
   });
 
   final Widget body;
+  final String? kicker;
   final String? title;
   final String? subtitle;
   final Widget? leading;
@@ -182,6 +190,7 @@ class _Content extends StatelessWidget {
             0,
           ),
           child: AppPageHeader(
+            kicker: kicker,
             title: title,
             subtitle: subtitle,
             leading: leading,

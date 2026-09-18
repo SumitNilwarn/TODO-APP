@@ -10,6 +10,7 @@ import '../../../shared/widgets/app_card.dart';
 import '../../../shared/widgets/app_chip.dart';
 import '../../../shared/widgets/app_empty_state.dart';
 import '../../../shared/widgets/app_error_state.dart';
+import '../../../shared/widgets/app_kicker.dart';
 import '../../../shared/widgets/app_snackbar.dart';
 import '../../../shared/widgets/motion/app_skeleton.dart';
 import '../../../shared/widgets/motion/fade_entrance.dart';
@@ -188,6 +189,7 @@ class _DashboardPageState extends State<DashboardPage> {
   Widget build(BuildContext context) {
     return AuthenticatedScaffold(
       selectedIndex: 0,
+      kicker: 'Workspace',
       title: 'Dashboard',
       subtitle: 'Overview of your tasks and progress',
       actions: [
@@ -331,7 +333,11 @@ class _DashboardData {
   final List<DashboardTask> upcoming;
 }
 
-/// Responsive grid of the six summary metrics.
+/// Responsive bento grid of the six summary metrics.
+///
+/// The total tile reads as a hero (spanning two columns on a dark ink panel);
+/// [DashboardTaskStatus.todo] slots beside it, the three mid metrics fill the
+/// next row, and the overdue metric spans the full width as an alert strip.
 class _MetricTiles extends StatelessWidget {
   const _MetricTiles({required this.summary});
 
@@ -348,45 +354,65 @@ class _MetricTiles extends StatelessWidget {
             : 1;
         final tileWidth =
             (constraints.maxWidth - (columns - 1) * AppSpacing.md) / columns;
+        final fullWidth = tileWidth * columns + (columns - 1) * AppSpacing.md;
+        double span(int cells) =>
+            cells * tileWidth + (cells - 1) * AppSpacing.md;
 
         final tiles = <Widget>[
-          _MetricTile(
-            label: 'Total',
-            count: summary.totalTasks,
-            icon: Icons.fact_check_outlined,
-            accent: context.appColors.secondary,
+          SizedBox(
+            width: columns > 1 ? span(2) : fullWidth,
+            child: _TotalHero(count: summary.totalTasks),
           ),
-          _MetricTile(
-            label: 'To do',
-            count: summary.todoTasks,
-            icon: Icons.event_note_outlined,
-            accent: context.appColors.secondary,
+          SizedBox(
+            width: tileWidth,
+            child: _MetricTile(
+              label: 'To do',
+              count: summary.todoTasks,
+              icon: Icons.event_note_outlined,
+              accent: context.appColors.secondary,
+            ),
           ),
-          _MetricTile(
-            label: 'In progress',
-            count: summary.inProgressTasks,
-            icon: Icons.pending_actions_outlined,
-            accent: context.appColors.info,
+          SizedBox(
+            width: tileWidth,
+            child: _MetricTile(
+              label: 'In progress',
+              count: summary.inProgressTasks,
+              icon: Icons.pending_actions_outlined,
+              accent: context.appColors.info,
+            ),
           ),
-          _MetricTile(
-            label: 'Completed',
-            count: summary.completedTasks,
-            icon: Icons.check_circle_outline,
-            accent: context.appColors.success,
+          SizedBox(
+            width: tileWidth,
+            child: _MetricTile(
+              label: 'Completed',
+              count: summary.completedTasks,
+              icon: Icons.check_circle_outline,
+              accent: context.appColors.success,
+            ),
           ),
-          _MetricTile(
-            label: 'Cancelled',
-            count: summary.cancelledTasks,
-            icon: Icons.block_outlined,
-            accent: context.appColors.textMuted,
+          SizedBox(
+            width: tileWidth,
+            child: _MetricTile(
+              label: 'Cancelled',
+              count: summary.cancelledTasks,
+              icon: Icons.block_outlined,
+              accent: context.appColors.textMuted,
+            ),
           ),
-          _MetricTile(
-            label: 'Overdue',
-            count: summary.overdueTasks,
-            icon: Icons.error_outline_rounded,
-            accent: summary.hasOverdue
-                ? context.appColors.danger
-                : context.appColors.textMuted,
+          SizedBox(
+            width: fullWidth,
+            child: _MetricTile(
+              label: 'Overdue',
+              count: summary.overdueTasks,
+              icon: Icons.error_outline_rounded,
+              accent: summary.hasOverdue
+                  ? context.appColors.danger
+                  : context.appColors.textMuted,
+              wide: true,
+              caption: summary.hasOverdue
+                  ? 'Past due and still open.'
+                  : 'Nothing past due, nice.',
+            ),
           ),
         ];
 
@@ -399,11 +425,88 @@ class _MetricTiles extends StatelessWidget {
                 delay: Duration(milliseconds: (i * 32).clamp(0, 320)),
                 duration: const Duration(milliseconds: 360),
                 offset: const Offset(0, 10),
-                child: SizedBox(width: tileWidth, child: tiles[i]),
+                child: tiles[i],
               ),
           ],
         );
       },
+    );
+  }
+}
+
+/// The "Total" hero: a two-column-wide ink panel announcing the workspace
+/// headline count.
+class _TotalHero extends StatelessWidget {
+  const _TotalHero({required this.count});
+
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = context.appColors;
+    final textTheme = Theme.of(context).textTheme;
+    return Semantics(
+      container: true,
+      label: 'Total, $count',
+      // The inner Text/Icon already announce the value visually; dropping
+      // their semantics keeps screen readers from reading the count twice.
+      excludeSemantics: true,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: tokens.primary,
+          borderRadius: AppRadius.extraLargeAll,
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: Stack(
+            children: [
+              Positioned(
+                right: AppSpacing.lg,
+                bottom: AppSpacing.lg,
+                child: Icon(
+                  Icons.fact_check_outlined,
+                  size: 84,
+                  color: tokens.onPrimary.withValues(alpha: 0.10),
+                ),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'TOTAL',
+                    style: textTheme.labelSmall?.copyWith(
+                      color: tokens.onPrimary.withValues(alpha: 0.72),
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 1.4,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  Text(
+                    '$count',
+                    style: textTheme.displayLarge?.copyWith(
+                      color: tokens.onPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                  Text(
+                    'Total',
+                    style: textTheme.titleMedium?.copyWith(
+                      color: tokens.onPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                  Text(
+                    'All tasks across your workspace.',
+                    style: textTheme.bodySmall?.copyWith(
+                      color: tokens.onPrimary.withValues(alpha: 0.72),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
@@ -414,12 +517,20 @@ class _MetricTile extends StatelessWidget {
     required this.count,
     required this.icon,
     required this.accent,
+    this.wide = false,
+    this.caption,
   });
 
   final String label;
   final int count;
   final IconData icon;
   final Color accent;
+
+  /// One-shot full-width strip layout (the overdue alert cell).
+  final bool wide;
+
+  /// Optional trailing microcopy shown only on [wide] tiles.
+  final String? caption;
 
   @override
   Widget build(BuildContext context) {
@@ -431,41 +542,56 @@ class _MetricTile extends StatelessWidget {
       // their semantics keeps screen readers from reading the count twice.
       excludeSemantics: true,
       child: AppCard(
-        padding: const EdgeInsets.all(AppSpacing.md),
+        padding: EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.md,
+        ),
         child: Row(
           children: [
-            Container(
-              width: 44,
-              height: 44,
-              alignment: Alignment.center,
+            DecoratedBox(
               decoration: BoxDecoration(
                 color: accent.withValues(alpha: 0.12),
-                borderRadius: AppRadius.mdAll,
+                borderRadius: BorderRadius.circular(AppRadius.md),
               ),
-              child: Icon(icon, size: 22, color: accent),
+              child: SizedBox(
+                width: 44,
+                height: 44,
+                child: Icon(icon, size: 22, color: accent),
+              ),
             ),
             const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '$count',
-                    style: textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  '$count',
+                  style: textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w700,
                   ),
-                  Text(
-                    label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: textTheme.bodySmall?.copyWith(
-                      color: context.appColors.textMuted,
-                    ),
+                ),
+                Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: textTheme.bodySmall?.copyWith(
+                    color: context.appColors.textMuted,
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
+            if (wide && caption != null) ...[
+              const Spacer(),
+              Flexible(
+                child: Text(
+                  caption!,
+                  textAlign: TextAlign.right,
+                  style: textTheme.bodySmall?.copyWith(
+                    color: context.appColors.textMuted,
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
       ),
@@ -488,6 +614,7 @@ class _StatusBreakdown extends StatelessWidget {
           const _SectionHeader(
             title: 'Status',
             subtitle: 'Your tasks by status',
+            eyebrow: 'Analytics',
           ),
           const SizedBox(height: AppSpacing.lg),
           if (!summary.hasTasks)
@@ -594,6 +721,8 @@ class _OverdueSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          AppKicker(label: 'Alerts', color: tokens.danger),
+          const SizedBox(height: AppSpacing.sm),
           Row(
             children: [
               Icon(Icons.error_outline_rounded, size: 20, color: tokens.danger),
@@ -657,6 +786,11 @@ class _TasksSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          const Align(
+            alignment: Alignment.centerLeft,
+            child: AppKicker(label: 'Queue'),
+          ),
+          const SizedBox(height: AppSpacing.sm),
           Wrap(
             alignment: WrapAlignment.spaceBetween,
             crossAxisAlignment: WrapCrossAlignment.center,
@@ -960,10 +1094,13 @@ class _CountBadge extends StatelessWidget {
 }
 
 class _SectionHeader extends StatelessWidget {
-  const _SectionHeader({required this.title, this.subtitle});
+  const _SectionHeader({required this.title, this.subtitle, this.eyebrow});
 
   final String title;
   final String? subtitle;
+
+  /// Optional technical eyebrow rendered above the title.
+  final String? eyebrow;
 
   @override
   Widget build(BuildContext context) {
@@ -972,6 +1109,10 @@ class _SectionHeader extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        if (eyebrow != null) ...[
+          AppKicker(label: eyebrow!),
+          const SizedBox(height: AppSpacing.xs),
+        ],
         Text(title, style: textTheme.titleMedium),
         if (subtitle != null) ...[
           const SizedBox(height: 2),

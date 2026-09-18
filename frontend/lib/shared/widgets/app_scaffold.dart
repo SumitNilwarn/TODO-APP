@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme/theme_extensions.dart';
+import 'app_kicker.dart';
 import 'responsive_container.dart';
 
 /// Standard page shell: consistent app bar, background and body layout.
@@ -13,6 +14,7 @@ class AppScaffold extends StatelessWidget {
   const AppScaffold({
     super.key,
     this.title,
+    this.kicker,
     this.body,
     this.leading,
     this.actions,
@@ -22,6 +24,9 @@ class AppScaffold extends StatelessWidget {
 
   /// Page title shown in the app bar.
   final String? title;
+
+  /// Optional micro-label rendered above the title in the app bar.
+  final String? kicker;
   final Widget? body;
   final Widget? leading;
   final List<Widget>? actions;
@@ -37,7 +42,20 @@ class AppScaffold extends StatelessWidget {
           ? AppBar(
               backgroundColor: context.appColors.background,
               leading: leading,
-              title: title == null ? null : Text(title!),
+              titleSpacing: 0,
+              title: title == null
+                  ? null
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (kicker != null) ...[
+                          AppKicker(label: kicker!),
+                          const SizedBox(height: 2),
+                        ],
+                        Text(title!),
+                      ],
+                    ),
               actions: actions,
             )
           : null,

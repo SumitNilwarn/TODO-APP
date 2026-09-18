@@ -75,7 +75,7 @@ class _AppCardState extends State<AppCard> {
       AppCardVariant.elevated => isDark ? null : AppShadows.subtle,
     };
     final raisedShadow = switch (widget.variant) {
-      AppCardVariant.standard => AppShadows.none,
+      AppCardVariant.standard => isDark ? null : AppShadows.subtle,
       AppCardVariant.elevated => isDark ? null : AppShadows.raised,
     };
 

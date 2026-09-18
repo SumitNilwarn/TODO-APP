@@ -22,6 +22,12 @@ abstract final class AppColors {
   /// Slightly tinted surface for secondary fills and hover states.
   static const Color surfaceAlt = Color(0xFFEDEDF0);
 
+  /// Interactive hover plane (nav items, rows, button surfaces).
+  static const Color hoverSurface = Color(0xFFF1F1F4);
+
+  /// Pressed/selected plane (active nav item, selected list rows).
+  static const Color selectedSurface = Color(0xFFE9E9ED);
+
   // ── Primary action ───────────────────────────────────────────────────────
   /// The brand/primary ink — dark CTA color and strongest text.
   static const Color primary = Color(0xFF17171B);
@@ -68,6 +74,9 @@ abstract final class AppColors {
   /// Hairline divider between stacked content.
   static const Color divider = Color(0x14000000);
 
+  /// Dimmed plane behind modals, sheets and overlays.
+  static const Color scrim = Color(0x66000000);
+
   // ── Feedback semantics ───────────────────────────────────────────────────
   /// Danger / destructive (errors, destructive actions).
   static const Color danger = Color(0xFFB3261E);
@@ -106,6 +115,10 @@ abstract final class AppColorsDark {
 
   static const Color surfaceAlt = Color(0xFF232329);
 
+  static const Color hoverSurface = Color(0xFF1C1C21);
+
+  static const Color selectedSurface = Color(0xFF26262D);
+
   // ── Primary action ───────────────────────────────────────────────────────
   static const Color primary = Color(0xFFF4F4F6);
 
@@ -137,6 +150,8 @@ abstract final class AppColorsDark {
   static const Color subtleBorder = Color(0x26FFFFFF);
 
   static const Color divider = Color(0x2EFFFFFF);
+
+  static const Color scrim = Color(0x99000000);
 
   // ── Feedback semantics (brighter for dark surfaces) ──────────────────────
   static const Color danger = Color(0xFFE57373);

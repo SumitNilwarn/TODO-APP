@@ -16,6 +16,8 @@ class AppThemeTokens extends ThemeExtension<AppThemeTokens> {
     required this.surface,
     required this.surfaceElevated,
     required this.surfaceAlt,
+    required this.hoverSurface,
+    required this.selectedSurface,
     required this.primary,
     required this.onPrimary,
     required this.primaryContainer,
@@ -29,6 +31,7 @@ class AppThemeTokens extends ThemeExtension<AppThemeTokens> {
     required this.border,
     required this.subtleBorder,
     required this.divider,
+    required this.scrim,
     required this.success,
     required this.warning,
     required this.danger,
@@ -40,6 +43,8 @@ class AppThemeTokens extends ThemeExtension<AppThemeTokens> {
       surface = AppColors.surface,
       surfaceElevated = AppColors.surfaceElevated,
       surfaceAlt = AppColors.surfaceAlt,
+      hoverSurface = AppColors.hoverSurface,
+      selectedSurface = AppColors.selectedSurface,
       primary = AppColors.primary,
       onPrimary = AppColors.onPrimary,
       primaryContainer = AppColors.primaryContainer,
@@ -53,6 +58,7 @@ class AppThemeTokens extends ThemeExtension<AppThemeTokens> {
       border = AppColors.border,
       subtleBorder = AppColors.subtleBorder,
       divider = AppColors.divider,
+      scrim = AppColors.scrim,
       success = AppColors.success,
       warning = AppColors.warning,
       danger = AppColors.danger,
@@ -63,6 +69,8 @@ class AppThemeTokens extends ThemeExtension<AppThemeTokens> {
       surface = AppColorsDark.surface,
       surfaceElevated = AppColorsDark.surfaceElevated,
       surfaceAlt = AppColorsDark.surfaceAlt,
+      hoverSurface = AppColorsDark.hoverSurface,
+      selectedSurface = AppColorsDark.selectedSurface,
       primary = AppColorsDark.primary,
       onPrimary = AppColorsDark.onPrimary,
       primaryContainer = AppColorsDark.primaryContainer,
@@ -76,6 +84,7 @@ class AppThemeTokens extends ThemeExtension<AppThemeTokens> {
       border = AppColorsDark.border,
       subtleBorder = AppColorsDark.subtleBorder,
       divider = AppColorsDark.divider,
+      scrim = AppColorsDark.scrim,
       success = AppColorsDark.success,
       warning = AppColorsDark.warning,
       danger = AppColorsDark.danger,
@@ -85,6 +94,8 @@ class AppThemeTokens extends ThemeExtension<AppThemeTokens> {
   final Color surface;
   final Color surfaceElevated;
   final Color surfaceAlt;
+  final Color hoverSurface;
+  final Color selectedSurface;
   final Color primary;
   final Color onPrimary;
   final Color primaryContainer;
@@ -98,6 +109,7 @@ class AppThemeTokens extends ThemeExtension<AppThemeTokens> {
   final Color border;
   final Color subtleBorder;
   final Color divider;
+  final Color scrim;
   final Color success;
   final Color warning;
   final Color danger;
@@ -109,6 +121,8 @@ class AppThemeTokens extends ThemeExtension<AppThemeTokens> {
     Color? surface,
     Color? surfaceElevated,
     Color? surfaceAlt,
+    Color? hoverSurface,
+    Color? selectedSurface,
     Color? primary,
     Color? onPrimary,
     Color? primaryContainer,
@@ -122,6 +136,7 @@ class AppThemeTokens extends ThemeExtension<AppThemeTokens> {
     Color? border,
     Color? subtleBorder,
     Color? divider,
+    Color? scrim,
     Color? success,
     Color? warning,
     Color? danger,
@@ -132,6 +147,8 @@ class AppThemeTokens extends ThemeExtension<AppThemeTokens> {
       surface: surface ?? this.surface,
       surfaceElevated: surfaceElevated ?? this.surfaceElevated,
       surfaceAlt: surfaceAlt ?? this.surfaceAlt,
+      hoverSurface: hoverSurface ?? this.hoverSurface,
+      selectedSurface: selectedSurface ?? this.selectedSurface,
       primary: primary ?? this.primary,
       onPrimary: onPrimary ?? this.onPrimary,
       primaryContainer: primaryContainer ?? this.primaryContainer,
@@ -145,6 +162,7 @@ class AppThemeTokens extends ThemeExtension<AppThemeTokens> {
       border: border ?? this.border,
       subtleBorder: subtleBorder ?? this.subtleBorder,
       divider: divider ?? this.divider,
+      scrim: scrim ?? this.scrim,
       success: success ?? this.success,
       warning: warning ?? this.warning,
       danger: danger ?? this.danger,
@@ -160,6 +178,8 @@ class AppThemeTokens extends ThemeExtension<AppThemeTokens> {
       surface: Color.lerp(surface, other.surface, t)!,
       surfaceElevated: Color.lerp(surfaceElevated, other.surfaceElevated, t)!,
       surfaceAlt: Color.lerp(surfaceAlt, other.surfaceAlt, t)!,
+      hoverSurface: Color.lerp(hoverSurface, other.hoverSurface, t)!,
+      selectedSurface: Color.lerp(selectedSurface, other.selectedSurface, t)!,
       primary: Color.lerp(primary, other.primary, t)!,
       onPrimary: Color.lerp(onPrimary, other.onPrimary, t)!,
       primaryContainer: Color.lerp(
@@ -185,6 +205,7 @@ class AppThemeTokens extends ThemeExtension<AppThemeTokens> {
       border: Color.lerp(border, other.border, t)!,
       subtleBorder: Color.lerp(subtleBorder, other.subtleBorder, t)!,
       divider: Color.lerp(divider, other.divider, t)!,
+      scrim: Color.lerp(scrim, other.scrim, t)!,
       success: Color.lerp(success, other.success, t)!,
       warning: Color.lerp(warning, other.warning, t)!,
       danger: Color.lerp(danger, other.danger, t)!,
@@ -200,6 +221,8 @@ class AppThemeTokens extends ThemeExtension<AppThemeTokens> {
             surface == other.surface &&
             surfaceElevated == other.surfaceElevated &&
             surfaceAlt == other.surfaceAlt &&
+            hoverSurface == other.hoverSurface &&
+            selectedSurface == other.selectedSurface &&
             primary == other.primary &&
             onPrimary == other.onPrimary &&
             primaryContainer == other.primaryContainer &&
@@ -213,6 +236,7 @@ class AppThemeTokens extends ThemeExtension<AppThemeTokens> {
             border == other.border &&
             subtleBorder == other.subtleBorder &&
             divider == other.divider &&
+            scrim == other.scrim &&
             success == other.success &&
             warning == other.warning &&
             danger == other.danger &&
@@ -226,6 +250,8 @@ class AppThemeTokens extends ThemeExtension<AppThemeTokens> {
       surface,
       surfaceElevated,
       surfaceAlt,
+      hoverSurface,
+      selectedSurface,
       primary,
       onPrimary,
       primaryContainer,
@@ -239,6 +265,7 @@ class AppThemeTokens extends ThemeExtension<AppThemeTokens> {
       border,
       subtleBorder,
       divider,
+      scrim,
       success,
       warning,
       danger,

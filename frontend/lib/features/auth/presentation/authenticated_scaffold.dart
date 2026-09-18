@@ -17,6 +17,7 @@ class AuthenticatedScaffold extends StatelessWidget {
   const AuthenticatedScaffold({
     super.key,
     required this.body,
+    this.kicker,
     this.title,
     this.subtitle,
     this.actions,
@@ -24,6 +25,7 @@ class AuthenticatedScaffold extends StatelessWidget {
   });
 
   final Widget body;
+  final String? kicker;
   final String? title;
   final String? subtitle;
   final List<Widget>? actions;
@@ -59,6 +61,7 @@ class AuthenticatedScaffold extends StatelessWidget {
         Navigator.of(context).pushReplacementNamed(target);
       },
       footer: const _IdentityFooter(),
+      kicker: kicker,
       title: title,
       subtitle: subtitle,
       actions: actions,

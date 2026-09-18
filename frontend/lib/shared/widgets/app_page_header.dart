@@ -1,18 +1,23 @@
 import 'package:flutter/material.dart';
 
 import '../theme/design_tokens.dart';
+import 'app_kicker.dart';
 
-/// Consistent page introduction block: title, optional subtitle, a leading
-/// element and trailing action row. Used at the top of every routed page so
-/// heading hierarchy and vertical rhythm stay uniform.
+/// Consistent page introduction block: optional kicker, title, optional
+/// subtitle, a leading element and trailing action row. Used at the top of
+/// every routed page so heading hierarchy and vertical rhythm stay uniform.
 class AppPageHeader extends StatelessWidget {
   const AppPageHeader({
     super.key,
+    this.kicker,
     this.title,
     this.subtitle,
     this.leading,
     this.actions,
   });
+
+  /// Technical micro-label rendered above the title (see [AppKicker]).
+  final String? kicker;
 
   /// Page title (rendered with `headlineMedium` — the dominant heading role).
   final String? title;
@@ -34,6 +39,10 @@ class AppPageHeader extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        if (kicker != null) ...[
+          AppKicker(label: kicker!),
+          const SizedBox(height: AppSpacing.xs),
+        ],
         if (title != null) Text(title!, style: textTheme.headlineMedium),
         if (subtitle != null) ...[
           const SizedBox(height: AppSpacing.sm),
@@ -57,7 +66,7 @@ class AppPageHeader extends StatelessWidget {
           );
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: AppSpacing.lg),
+      padding: const EdgeInsets.only(bottom: AppSpacing.md),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [

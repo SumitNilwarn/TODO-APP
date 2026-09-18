@@ -7,7 +7,9 @@ import '../../../shared/theme/design_tokens.dart';
 import '../../../shared/theme/theme_extensions.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_card.dart';
+import '../../../shared/widgets/app_kicker.dart';
 import '../../../shared/widgets/motion/fade_entrance.dart';
+import '../../../shared/widgets/motion/perspective_tilt.dart';
 import '../../../shared/widgets/responsive_container.dart';
 import '../../auth/presentation/app_scope.dart';
 import '../../auth/domain/auth_models.dart';
@@ -44,9 +46,17 @@ class HomePage extends StatelessWidget {
                   const FadeEntrance(
                     offset: Offset(0, 10),
                     duration: Duration(milliseconds: 420),
-                    child: _AppMark(),
+                    child: PerspectiveTilt(child: _AppMark()),
                   ),
                   const SizedBox(height: AppSpacing.lg),
+                  FadeEntrance(
+                    delay: const Duration(milliseconds: 60),
+                    child: const Align(
+                      alignment: AlignmentDirectional.centerStart,
+                      child: AppKicker(label: 'Command center'),
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
                   FadeEntrance(
                     delay: const Duration(milliseconds: 90),
                     child: Text(

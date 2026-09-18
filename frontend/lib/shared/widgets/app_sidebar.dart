@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../theme/design_tokens.dart';
 import '../theme/theme_extensions.dart';
+import 'app_kicker.dart';
 
 /// A single navigation destination in the sidebar.
 @immutable
@@ -28,10 +29,12 @@ class AppNavItem {
 
 /// Persistent navigation rail, driven by the same component on every screen.
 ///
-/// Renders a brand row, the navigation list and a footer slot (user/actions).
-/// Navigation items expose full keyboard focus, hover/press overlays and a
-/// selected state; the container itself stays quiet so it works inside a
-/// desktop `Row`, a `Drawer` or a narrow rail.
+/// Renders a brand row, a quiet "Navigation" section eyebrow, the navigation
+/// list and a footer slot (user/actions). Navigation items expose full keyboard
+/// focus, hover/press overlays and a selected state (calm surface + ink icon +
+/// accent bar), responding with a subtle leading-icon slide on hover; the
+/// container itself stays quiet so it works inside a desktop `Row`, a `Drawer`
+/// or a narrow rail.
 class AppSidebar extends StatelessWidget {
   const AppSidebar({
     super.key,
@@ -129,6 +132,14 @@ class AppSidebar extends StatelessWidget {
             child: ListView(
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.page),
               children: [
+                const Padding(
+                  padding: EdgeInsets.only(
+                    left: AppSpacing.md,
+                    bottom: AppSpacing.sm,
+                    top: AppSpacing.xs,
+                  ),
+                  child: AppKicker(label: 'Navigation'),
+                ),
                 for (var i = 0; i < items.length; i++)
                   Padding(
                     padding: const EdgeInsets.only(bottom: AppSpacing.xs),
@@ -155,7 +166,7 @@ class AppSidebar extends StatelessWidget {
 }
 
 /// Rounded navigation row with focus, hover, press and selected states.
-class _SidebarItem extends StatelessWidget {
+class _SidebarItem extends StatefulWidget {
   const _SidebarItem({required this.item, required this.selected, this.onTap});
 
   final AppNavItem item;
@@ -163,12 +174,30 @@ class _SidebarItem extends StatelessWidget {
   final VoidCallback? onTap;
 
   @override
+  State<_SidebarItem> createState() => _SidebarItemState();
+}
+
+class _SidebarItemState extends State<_SidebarItem> {
+  bool _hovered = false;
+
+  @override
   Widget build(BuildContext context) {
     final tokens = context.appColors;
     final textTheme = Theme.of(context).textTheme;
+    final item = widget.item;
+    final selected = widget.selected;
+    final hovered = _hovered;
 
-    final background = selected ? tokens.surfaceAlt : Colors.transparent;
-    final fg = selected ? tokens.textPrimary : tokens.textSecondary;
+    final background = selected
+        ? tokens.selectedSurface
+        : hovered
+        ? tokens.hoverSurface
+        : Colors.transparent;
+    final fg = selected
+        ? tokens.textPrimary
+        : hovered
+        ? tokens.textPrimary
+        : tokens.textSecondary;
     final labelStyle = textTheme.labelMedium?.copyWith(color: fg);
     final icon = (selected && item.selectedIcon != null)
         ? item.selectedIcon!
@@ -178,51 +207,66 @@ class _SidebarItem extends StatelessWidget {
       button: true,
       selected: selected,
       label: item.label,
-      child: InkWell(
-        onTap: onTap,
-        mouseCursor: onTap == null
+      child: MouseRegion(
+        onEnter: (_) => setState(() => _hovered = true),
+        onExit: (_) => setState(() => _hovered = false),
+        cursor: widget.onTap == null
             ? SystemMouseCursors.basic
             : SystemMouseCursors.click,
-        borderRadius: AppRadius.mediumAll,
-        overlayColor: WidgetStateProperty.resolveWith((states) {
-          if (states.contains(WidgetState.hovered)) {
-            return tokens.primary.withValues(alpha: 0.04);
-          }
-          if (states.contains(WidgetState.pressed)) {
-            return tokens.primary.withValues(alpha: 0.08);
-          }
-          if (states.contains(WidgetState.focused)) {
-            return tokens.primary.withValues(alpha: 0.05);
-          }
-          return null;
-        }),
-        child: AnimatedContainer(
-          duration: AppDurations.fast,
-          curve: AppCurves.enter,
-          height: AppSizes.navItemHeight,
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-          decoration: BoxDecoration(
-            color: background,
-            borderRadius: AppRadius.mediumAll,
-          ),
-          child: Row(
-            children: [
-              // A quiet three-point accent bar marks the active destination.
-              if (selected) ...[
-                Container(
+        child: InkWell(
+          onTap: widget.onTap,
+          borderRadius: AppRadius.mediumAll,
+          overlayColor: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.pressed)) {
+              return tokens.primary.withValues(alpha: 0.08);
+            }
+            if (states.contains(WidgetState.focused)) {
+              return tokens.primary.withValues(alpha: 0.05);
+            }
+            return null;
+          }),
+          child: AnimatedContainer(
+            duration: AppDurations.fast,
+            curve: AppCurves.enter,
+            height: AppSizes.navItemHeight,
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+            decoration: BoxDecoration(
+              color: background,
+              borderRadius: AppRadius.mediumAll,
+            ),
+            child: Row(
+              children: [
+                // A quiet accent bar marks the active destination.
+                AnimatedContainer(
+                  duration: AppDurations.fast,
+                  curve: AppCurves.enter,
                   width: 3,
-                  height: 20,
+                  height: selected ? 20 : 0,
                   decoration: BoxDecoration(
                     color: tokens.primary,
                     borderRadius: AppRadius.pillAll,
                   ),
                 ),
                 const SizedBox(width: AppSpacing.sm + 3),
+                AnimatedSlide(
+                  offset: hovered && !selected
+                      ? const Offset(0.18, 0)
+                      : Offset.zero,
+                  duration: AppDurations.fast,
+                  curve: AppCurves.standard,
+                  child: Icon(icon, size: 20, color: fg),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Flexible(
+                  child: AnimatedDefaultTextStyle(
+                    duration: AppDurations.fast,
+                    curve: AppCurves.standard,
+                    style: labelStyle!,
+                    child: Text(item.label, maxLines: 1),
+                  ),
+                ),
               ],
-              Icon(icon, size: 20, color: fg),
-              const SizedBox(width: AppSpacing.md),
-              Flexible(child: Text(item.label, style: labelStyle, maxLines: 1)),
-            ],
+            ),
           ),
         ),
       ),

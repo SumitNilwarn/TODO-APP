@@ -221,6 +221,7 @@ class _TaskDetailPageState extends State<TaskDetailPage> {
   Widget build(BuildContext context) {
     return AuthenticatedScaffold(
       selectedIndex: 1,
+      kicker: 'Details',
       title: 'Task',
       subtitle: _task?.title ?? 'Details',
       actions: [

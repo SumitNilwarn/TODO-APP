@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../data/api/api_exception.dart';
 import '../../../shared/theme/design_tokens.dart';
+import '../../../shared/theme/theme_extensions.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_card.dart';
 import '../../../shared/widgets/app_empty_state.dart';
@@ -242,6 +243,7 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget build(BuildContext context) {
     return AuthenticatedScaffold(
       selectedIndex: 2,
+      kicker: 'Identity',
       title: 'Profile',
       subtitle: _creating
           ? 'Tell us a little about yourself.'
@@ -307,11 +309,58 @@ class _ProfilePageState extends State<ProfilePage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          _buildIdentity(context),
+          const Divider(height: AppSpacing.xl + AppSpacing.xs),
           _buildForm(context, editing: true),
           const SizedBox(height: AppSpacing.lg),
           _buildActions(),
         ],
       ),
+    );
+  }
+
+  /// Identity header strip: monogram, display name and current time zone.
+  Widget _buildIdentity(BuildContext context) {
+    final tokens = context.appColors;
+    final textTheme = Theme.of(context).textTheme;
+    final auth = AppScope.authOf(context);
+    final name = _displayName.text.trim().isNotEmpty
+        ? _displayName.text.trim()
+        : (auth.username ?? 'Member');
+    final initial = name.characters.first.toUpperCase();
+    final timezone = _timezone.text.trim();
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 52,
+          height: 52,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: tokens.primary,
+            borderRadius: AppRadius.mdAll,
+          ),
+          child: Text(
+            initial,
+            style: textTheme.titleLarge?.copyWith(color: tokens.onPrimary),
+          ),
+        ),
+        const SizedBox(width: AppSpacing.md),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(name, style: textTheme.titleMedium),
+              const SizedBox(height: AppSpacing.xs),
+              Text(
+                timezone.isNotEmpty ? timezone : 'No time zone set',
+                style: textTheme.bodySmall?.copyWith(color: tokens.textMuted),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
@@ -347,22 +396,44 @@ class _ProfilePageState extends State<ProfilePage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _TextField(
-            controller: _firstName,
-            label: 'First name',
-            hintText: 'Ada',
-            helperText: empty,
-            validator: (value) =>
-                validateNameField(value, label: 'First name', max: 50),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          _TextField(
-            controller: _lastName,
-            label: 'Last name',
-            hintText: 'Lovelace',
-            helperText: empty,
-            validator: (value) =>
-                validateNameField(value, label: 'Last name', max: 50),
+          const _SectionLabel(label: 'Identity'),
+          const SizedBox(height: AppSpacing.sm),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final firstName = _TextField(
+                controller: _firstName,
+                label: 'First name',
+                hintText: 'Ada',
+                helperText: empty,
+                validator: (value) =>
+                    validateNameField(value, label: 'First name', max: 50),
+              );
+              final lastName = _TextField(
+                controller: _lastName,
+                label: 'Last name',
+                hintText: 'Lovelace',
+                helperText: empty,
+                validator: (value) =>
+                    validateNameField(value, label: 'Last name', max: 50),
+              );
+              if (constraints.maxWidth >= 520) {
+                return Row(
+                  children: [
+                    Expanded(child: firstName),
+                    const SizedBox(width: AppSpacing.md),
+                    Expanded(child: lastName),
+                  ],
+                );
+              }
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  firstName,
+                  const SizedBox(height: AppSpacing.md),
+                  lastName,
+                ],
+              );
+            },
           ),
           const SizedBox(height: AppSpacing.md),
           _TextField(
@@ -372,7 +443,9 @@ class _ProfilePageState extends State<ProfilePage> {
             helperText: empty,
             validator: validateDisplayName,
           ),
-          const SizedBox(height: AppSpacing.md),
+          const SizedBox(height: AppSpacing.lg),
+          const _SectionLabel(label: 'Preferences'),
+          const SizedBox(height: AppSpacing.sm),
           _TimezoneField(
             controller: _timezone,
             timezones: _timezones,
@@ -416,6 +489,26 @@ class _ProfilePageState extends State<ProfilePage> {
       return error.message!;
     }
     return 'Profile could not be saved. Please try again.';
+  }
+}
+
+/// Small mono group label used to section the form (e.g. "IDENTITY").
+class _SectionLabel extends StatelessWidget {
+  const _SectionLabel({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final tokens = context.appColors;
+    return Text(
+      label.toUpperCase(),
+      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+        color: tokens.textMuted,
+        letterSpacing: 1.4,
+        fontWeight: FontWeight.w700,
+      ),
+    );
   }
 }
 

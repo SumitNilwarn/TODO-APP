@@ -211,6 +211,7 @@ class _TaskFormPageState extends State<TaskFormPage> {
   Widget build(BuildContext context) {
     return AuthenticatedScaffold(
       selectedIndex: 1,
+      kicker: 'Editor',
       title: widget.isEditing ? 'Edit task' : 'Create task',
       subtitle: widget.isEditing
           ? 'Update the details of your task.'
@@ -244,13 +245,13 @@ class _TaskFormPageState extends State<TaskFormPage> {
                   errorText: _titleError,
                   enabled: !_submitting,
                 ),
-                const SizedBox(height: AppSpacing.md),
+                const SizedBox(height: AppSpacing.sm),
                 _DescriptionField(
                   controller: _description,
                   errorText: _descriptionError,
                   enabled: !_submitting,
                 ),
-                const SizedBox(height: AppSpacing.md),
+                const SizedBox(height: AppSpacing.sm),
                 _DueDateField(
                   dueDate: _dueDate,
                   enabled: !_submitting,

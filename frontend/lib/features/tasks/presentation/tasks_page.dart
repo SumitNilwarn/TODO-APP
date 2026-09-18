@@ -281,6 +281,7 @@ class _TasksPageState extends State<TasksPage> {
   Widget build(BuildContext context) {
     return AuthenticatedScaffold(
       selectedIndex: 1,
+      kicker: 'Queue',
       title: 'Tasks',
       subtitle: 'Your to-do list.',
       actions: [
@@ -968,6 +969,15 @@ class _TaskListTile extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
+            // A quiet status gutter gives each row a technical signature.
+            DecoratedBox(
+              decoration: BoxDecoration(
+                color: _statusAccent(task.status, tokens),
+                borderRadius: AppRadius.pillAll,
+              ),
+              child: const SizedBox(width: 3, height: 48),
+            ),
+            const SizedBox(width: AppSpacing.md),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -1050,6 +1060,16 @@ class _StatusBadge extends StatelessWidget {
     };
     return AppBadge(status.label, variant: variant, icon: icon);
   }
+}
+
+/// Accent color used by the tile gutter for a given status.
+Color _statusAccent(TaskStatus status, AppThemeTokens tokens) {
+  return switch (status) {
+    TaskStatus.todo => tokens.secondary,
+    TaskStatus.inProgress => tokens.info,
+    TaskStatus.completed => tokens.success,
+    TaskStatus.cancelled => tokens.textMuted,
+  };
 }
 
 // =============================================================================

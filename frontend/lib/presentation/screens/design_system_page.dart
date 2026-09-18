@@ -14,6 +14,7 @@ import '../../shared/widgets/app_loading.dart';
 import '../../shared/widgets/app_scaffold.dart';
 import '../../shared/widgets/app_snackbar.dart';
 import '../../shared/widgets/app_text_field.dart';
+import '../../shared/widgets/motion/fade_entrance.dart';
 
 /// Interactive inventory of the design system — every token and reusable
 /// component rendered in one place for validation and reference.
@@ -27,71 +28,85 @@ class DesignSystemPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return AppScaffold(
       title: 'Design system',
+      kicker: 'Catalog',
       body: SingleChildScrollView(
         padding: const EdgeInsets.only(bottom: AppSpacing.giant),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: const [
-            _Section(
-              'Typography',
-              description:
-                  'All text roles come from the shared TextTheme. Screens pick a '
-                  'role instead of inventing sizes.',
-              child: _TypographyGallery(),
-            ),
-            _Section(
-              'Color',
-              description:
-                  'Surfaces, primary/secondary action colors, text roles, borders '
-                  'and feedback semantics.',
-              child: _ColorGallery(),
-            ),
-            _Section(
-              'Spacing & radius',
-              description:
-                  'Every gap and corner derives from the token scale — never '
-                  'arbitrary numbers.',
-              child: _GeometryGallery(),
-            ),
-            _Section(
-              'Buttons',
-              description:
-                  'Primary, secondary, outlined, destructive and text. '
-                  'States: idle, disabled and loading.',
-              child: _ButtonGallery(),
-            ),
-            _Section(
-              'Inputs',
-              description:
-                  'Filled, rounded fields with focus and error styling from the '
-                  'theme.',
-              child: _InputGallery(),
-            ),
-            _Section(
-              'Cards',
-              description:
-                  'Standard and elevated surfaces; interactive cards expose '
-                  'hover, focus and ripple.',
-              child: _CardGallery(),
-            ),
-            _Section(
-              'Badges & dividers',
-              description: 'Status pills and the labeled divider.',
-              child: _BadgeGallery(),
-            ),
-            _Section(
-              'Feedback',
-              description:
-                  'Snackbars, dialogs and confirmations — the only sanctioned '
-                  'paths for transient messages.',
-              child: _FeedbackGallery(),
-            ),
-            _Section(
-              'States',
-              description: 'Loading, empty and error placeholders.',
-              child: _StateGallery(),
-            ),
-          ],
+        child: const FadeEntrance(
+          offset: Offset(0, 10),
+          duration: Duration(milliseconds: 420),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _Section(
+                '01',
+                'Typography',
+                description:
+                    'All text roles come from the shared TextTheme. Screens pick a '
+                    'role instead of inventing sizes.',
+                child: _TypographyGallery(),
+              ),
+              _Section(
+                '02',
+                'Color',
+                description:
+                    'Surfaces, primary/secondary action colors, text roles, borders '
+                    'and feedback semantics.',
+                child: _ColorGallery(),
+              ),
+              _Section(
+                '03',
+                'Spacing & radius',
+                description:
+                    'Every gap and corner derives from the token scale — never '
+                    'arbitrary numbers.',
+                child: _GeometryGallery(),
+              ),
+              _Section(
+                '04',
+                'Buttons',
+                description:
+                    'Primary, secondary, outlined, destructive and text. '
+                    'States: idle, disabled and loading.',
+                child: _ButtonGallery(),
+              ),
+              _Section(
+                '05',
+                'Inputs',
+                description:
+                    'Filled, rounded fields with focus and error styling from the '
+                    'theme.',
+                child: _InputGallery(),
+              ),
+              _Section(
+                '06',
+                'Cards',
+                description:
+                    'Standard and elevated surfaces; interactive cards expose '
+                    'hover, focus and ripple.',
+                child: _CardGallery(),
+              ),
+              _Section(
+                '07',
+                'Badges & dividers',
+                description: 'Status pills and the labeled divider.',
+                child: _BadgeGallery(),
+              ),
+              _Section(
+                '08',
+                'Feedback',
+                description:
+                    'Snackbars, dialogs and confirmations — the only sanctioned '
+                    'paths for transient messages.',
+                child: _FeedbackGallery(),
+              ),
+              _Section(
+                '09',
+                'States',
+                description: 'Loading, empty and error placeholders.',
+                child: _StateGallery(),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -99,27 +114,56 @@ class DesignSystemPage extends StatelessWidget {
 }
 
 class _Section extends StatelessWidget {
-  const _Section(this.title, {this.description, required this.child});
+  const _Section(
+    this.index,
+    this.title, {
+    this.description,
+    required this.child,
+  });
 
+  final String index;
   final String title;
   final String? description;
   final Widget child;
 
   @override
   Widget build(BuildContext context) {
+    final tokens = context.appColors;
     final textTheme = Theme.of(context).textTheme;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: AppSpacing.xl),
+    return Container(
+      decoration: BoxDecoration(
+        border: Border(top: BorderSide(color: tokens.border)),
+      ),
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.xl),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: textTheme.headlineSmall),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
+            children: [
+              SizedBox(
+                width: 40,
+                child: Text(
+                  index,
+                  style: textTheme.bodySmall?.copyWith(
+                    color: tokens.textMuted,
+                    fontFamily: 'monospace',
+                  ),
+                ),
+              ),
+              Expanded(child: Text(title, style: textTheme.headlineSmall)),
+            ],
+          ),
           if (description != null) ...[
             const SizedBox(height: AppSpacing.sm),
-            Text(
-              description!,
-              style: textTheme.bodyMedium?.copyWith(
-                color: textTheme.bodySmall?.color,
+            Padding(
+              padding: const EdgeInsets.only(left: 40),
+              child: Text(
+                description!,
+                style: textTheme.bodyMedium?.copyWith(
+                  color: textTheme.bodySmall?.color,
+                ),
               ),
             ),
           ],
