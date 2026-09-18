@@ -4,7 +4,6 @@ import '../../../core/constants/app_constants.dart';
 import '../../../presentation/router/app_router.dart';
 import '../../../shared/theme/design_tokens.dart';
 import '../../../shared/theme/theme_extensions.dart';
-import '../../../shared/theme/theme_scope.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_confirmation_dialog.dart';
 import '../../../shared/widgets/app_shell.dart';
@@ -155,26 +154,6 @@ class _IdentityFooterState extends State<_IdentityFooter> {
                       ),
                     ],
                   ],
-                ),
-              ),
-              IconButton(
-                key: const Key('theme-toggle'),
-                tooltip: ThemeScope.of(context).dark
-                    ? 'Switch to light theme'
-                    : 'Switch to dark theme',
-                onPressed: ThemeScope.of(context).onToggle,
-                icon: AnimatedSwitcher(
-                  duration: AppDurations.fast,
-                  transitionBuilder: (child, animation) =>
-                      FadeTransition(opacity: animation, child: child),
-                  child: Icon(
-                    ThemeScope.of(context).dark
-                        ? Icons.light_mode_outlined
-                        : Icons.dark_mode_outlined,
-                    key: ValueKey(ThemeScope.of(context).dark),
-                    size: 20,
-                    color: tokens.textSecondary,
-                  ),
                 ),
               ),
             ],

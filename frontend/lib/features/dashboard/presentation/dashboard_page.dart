@@ -12,6 +12,7 @@ import '../../../shared/widgets/app_empty_state.dart';
 import '../../../shared/widgets/app_error_state.dart';
 import '../../../shared/widgets/app_kicker.dart';
 import '../../../shared/widgets/app_snackbar.dart';
+import '../../../shared/widgets/chrome/command_chrome.dart';
 import '../../../shared/widgets/motion/app_skeleton.dart';
 import '../../../shared/widgets/motion/fade_entrance.dart';
 import '../../../shared/widgets/responsive_container.dart';
@@ -451,60 +452,61 @@ class _TotalHero extends StatelessWidget {
       // The inner Text/Icon already announce the value visually; dropping
       // their semantics keeps screen readers from reading the count twice.
       excludeSemantics: true,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: tokens.primary,
-          borderRadius: AppRadius.extraLargeAll,
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          child: Stack(
-            children: [
-              Positioned(
-                right: AppSpacing.lg,
-                bottom: AppSpacing.lg,
-                child: Icon(
-                  Icons.fact_check_outlined,
-                  size: 84,
-                  color: tokens.onPrimary.withValues(alpha: 0.10),
+      child: FloatingPanel(
+        color: tokens.primary,
+        showGlow: true,
+        accent: tokens.onPrimary,
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Stack(
+          children: [
+            Positioned(
+              right: AppSpacing.lg,
+              bottom: AppSpacing.lg,
+              child: Icon(
+                Icons.fact_check_outlined,
+                size: 84,
+                color: tokens.onPrimary.withValues(alpha: 0.10),
+              ),
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Row(
+                  children: [
+                    Expanded(
+                      child: TechLabel(
+                        'Workspace total',
+                        icon: Icons.fact_check_outlined,
+                      ),
+                    ),
+                    SizedBox(width: AppSpacing.md),
+                    TechReadout('TOTAL'),
+                  ],
                 ),
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'TOTAL',
-                    style: textTheme.labelSmall?.copyWith(
-                      color: tokens.onPrimary.withValues(alpha: 0.72),
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 1.4,
-                    ),
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  '$count',
+                  style: textTheme.displayLarge?.copyWith(
+                    color: tokens.onPrimary,
                   ),
-                  const SizedBox(height: AppSpacing.sm),
-                  Text(
-                    '$count',
-                    style: textTheme.displayLarge?.copyWith(
-                      color: tokens.onPrimary,
-                    ),
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  'Total',
+                  style: textTheme.titleMedium?.copyWith(
+                    color: tokens.onPrimary,
                   ),
-                  const SizedBox(height: AppSpacing.xs),
-                  Text(
-                    'Total',
-                    style: textTheme.titleMedium?.copyWith(
-                      color: tokens.onPrimary,
-                    ),
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  'All tasks across your workspace.',
+                  style: textTheme.bodySmall?.copyWith(
+                    color: tokens.onPrimary.withValues(alpha: 0.72),
                   ),
-                  const SizedBox(height: AppSpacing.xs),
-                  Text(
-                    'All tasks across your workspace.',
-                    style: textTheme.bodySmall?.copyWith(
-                      color: tokens.onPrimary.withValues(alpha: 0.72),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
@@ -541,8 +543,8 @@ class _MetricTile extends StatelessWidget {
       // The child Text/Icon already announce the value visually; dropping
       // their semantics keeps screen readers from reading the count twice.
       excludeSemantics: true,
-      child: AppCard(
-        padding: EdgeInsets.symmetric(
+      child: FloatingPanel(
+        padding: const EdgeInsets.symmetric(
           horizontal: AppSpacing.md,
           vertical: AppSpacing.md,
         ),
@@ -1110,7 +1112,7 @@ class _SectionHeader extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         if (eyebrow != null) ...[
-          AppKicker(label: eyebrow!),
+          TechLabel(eyebrow!),
           const SizedBox(height: AppSpacing.xs),
         ],
         Text(title, style: textTheme.titleMedium),

@@ -1,43 +1,57 @@
 import 'package:flutter/material.dart';
 
 import 'app_typography.dart';
+import 'command_design_tokens.dart';
 import 'design_tokens.dart';
 import 'theme_extensions.dart';
 
-/// Application-wide theme following the Todo App design direction: minimal,
-/// calm, monochrome neutral surfaces, rounded geometry and an ink CTA that
-/// adapts to the brightness (near-black in light, near-white in dark).
+/// Application-wide themes for the Todo App.
 ///
-/// Architecturally, the theme is composed from:
-/// - raw tokens (`design_tokens.dart`, `app_colors.dart`),
-/// - semantic roles (`AppThemeTokens` theme extension),
-/// - assembled Material component themes below.
-/// Components read colors through `context.appColors` and geometry through the
-/// static token classes so nothing is hardcoded inline.
+/// Two fully designed systems ship with the product, named after the material
+/// each is machined from:
+///
+/// - **WHITE** (`AppTheme.white`, alias `AppTheme.light`) — calm, cool,
+///   paper-like daylight UI. The default for tests and the alternative look.
+/// - **GRAPHITE** (`AppTheme.graphite`, alias `AppTheme.dark`) — the cinematic
+///   default: deep blue-steel surfaces, silver ink and an electric cool glow.
+///
+/// Architecturally both themes compose from the same pieces: raw tokens
+/// (`design_tokens.dart`, `app_colors.dart`), semantic roles
+/// (`AppThemeTokens`), command chrome (`CommandDesignTokens`) and the assembled
+/// Material component themes below. Components read colors through
+/// `context.appColors`, chrome through `context.commandTokens` and geometry
+/// through the static token classes — nothing hardcoded inline.
 abstract final class AppTheme {
-  static ThemeData light() {
-    return _build(
-      brightness: Brightness.light,
-      tokens: const AppThemeTokens.light(),
-      textTheme: AppTypography.light(),
-      snackbarBackground: const Color(0xFF26262B),
-    );
-  }
+  /// The WHITE theme — calm paper surfaces, ink CTAs, restrained shadows.
+  static ThemeData white() => _build(
+    brightness: Brightness.light,
+    tokens: const AppThemeTokens.light(),
+    command: const CommandDesignTokens.white(),
+    textTheme: AppTypography.white(),
+    snackbarBackground: const Color(0xFF26262B),
+  );
 
-  static ThemeData dark() {
-    return _build(
-      brightness: Brightness.dark,
-      tokens: const AppThemeTokens.dark(),
-      textTheme: AppTypography.dark(),
-      // In dark mode the snackbar is an elevated plane with a hairline edge
-      // rather than an opaque black bar sitting on already-dark surfaces.
-      snackbarBackground: const Color(0xFF1D1D22),
-    );
-  }
+  /// The GRAPHITE theme — deep steel surfaces, silver ink, cool glow.
+  static ThemeData graphite() => _build(
+    brightness: Brightness.dark,
+    tokens: const AppThemeTokens.dark(),
+    command: const CommandDesignTokens.graphite(),
+    textTheme: AppTypography.graphite(),
+    // In GRAPHITE the snackbar is an elevated plane with a hairline edge
+    // rather than an opaque black bar sitting on already-dark surfaces.
+    snackbarBackground: const Color(0xFF1A1D23),
+  );
+
+  /// Backwards-compatible alias for [white].
+  static ThemeData light() => white();
+
+  /// Backwards-compatible alias for [graphite].
+  static ThemeData dark() => graphite();
 
   static ThemeData _build({
     required Brightness brightness,
     required AppThemeTokens tokens,
+    required CommandDesignTokens command,
     required TextTheme textTheme,
     required Color snackbarBackground,
   }) {
@@ -55,6 +69,7 @@ abstract final class AppTheme {
           onSecondary: tokens.onSecondary,
           secondaryContainer: tokens.secondaryContainer,
           onSecondaryContainer: tokens.onSecondaryContainer,
+          tertiary: command.glowStrong,
           surface: tokens.surface,
           onSurface: tokens.textPrimary,
           surfaceContainerHighest: tokens.surfaceAlt,
@@ -75,7 +90,7 @@ abstract final class AppTheme {
       focusColor: tokens.secondary.withValues(alpha: 0.45),
       visualDensity: VisualDensity.adaptivePlatformDensity,
       materialTapTargetSize: MaterialTapTargetSize.padded,
-      extensions: [tokens],
+      extensions: [tokens, command],
       inputDecorationTheme: _inputDecorationTheme(textTheme, tokens),
       filledButtonTheme: FilledButtonThemeData(
         style: _filledButtonStyle(textTheme, tokens),
@@ -86,6 +101,7 @@ abstract final class AppTheme {
       textButtonTheme: TextButtonThemeData(
         style: _textButtonStyle(textTheme, tokens),
       ),
+      iconButtonTheme: IconButtonThemeData(style: _iconButtonStyle(tokens)),
       progressIndicatorTheme: ProgressIndicatorThemeData(color: tokens.primary),
       dividerTheme: DividerThemeData(
         color: tokens.divider,
@@ -175,8 +191,10 @@ abstract final class AppTheme {
     return SnackBarThemeData(
       behavior: SnackBarBehavior.floating,
       backgroundColor: background,
-      contentTextStyle: textTheme.bodyMedium?.copyWith(color: tokens.onPrimary),
-      actionTextColor: tokens.onPrimary,
+      contentTextStyle: textTheme.bodyMedium?.copyWith(
+        color: tokens.textPrimary,
+      ),
+      actionTextColor: tokens.textPrimary,
       shape: RoundedRectangleBorder(
         borderRadius: AppRadius.smallAll,
         side: BorderSide(color: tokens.border),
@@ -329,6 +347,13 @@ abstract final class AppTheme {
         }
         return null;
       }),
+    );
+  }
+
+  static ButtonStyle _iconButtonStyle(AppThemeTokens tokens) {
+    return IconButton.styleFrom(
+      foregroundColor: tokens.primary,
+      shape: RoundedRectangleBorder(borderRadius: AppRadius.mdAll),
     );
   }
 }

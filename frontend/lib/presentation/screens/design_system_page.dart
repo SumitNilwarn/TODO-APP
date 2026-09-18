@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../shared/theme/app_colors.dart';
 import '../../shared/theme/design_tokens.dart';
 import '../../shared/theme/theme_extensions.dart';
 import '../../shared/widgets/app_badge.dart';
@@ -14,13 +15,15 @@ import '../../shared/widgets/app_loading.dart';
 import '../../shared/widgets/app_scaffold.dart';
 import '../../shared/widgets/app_snackbar.dart';
 import '../../shared/widgets/app_text_field.dart';
+import '../../shared/widgets/chrome/command_chrome.dart';
 import '../../shared/widgets/motion/fade_entrance.dart';
 
 /// Interactive inventory of the design system — every token and reusable
 /// component rendered in one place for validation and reference.
 ///
 /// Purely presentational: no authentication, no data, no API calls. It is the
-/// canonical gallery that designers and new contributors can inspect.
+/// canonical gallery that designers and new contributors can inspect. Both
+/// palettes are rendered so the command center can be audited side by side.
 class DesignSystemPage extends StatelessWidget {
   const DesignSystemPage({super.key});
 
@@ -31,27 +34,30 @@ class DesignSystemPage extends StatelessWidget {
       kicker: 'Catalog',
       body: SingleChildScrollView(
         padding: const EdgeInsets.only(bottom: AppSpacing.giant),
-        child: const FadeEntrance(
-          offset: Offset(0, 10),
-          duration: Duration(milliseconds: 420),
+        child: FadeEntrance(
+          offset: const Offset(0, 10),
+          duration: const Duration(milliseconds: 420),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              const _TechBar(),
+              const SizedBox(height: AppSpacing.lg),
               _Section(
                 '01',
                 'Typography',
                 description:
-                    'All text roles come from the shared TextTheme. Screens pick a '
-                    'role instead of inventing sizes.',
-                child: _TypographyGallery(),
+                    'All text roles come from the shared TextTheme. Screens pick '
+                    'a role instead of inventing sizes.',
+                child: const _TypographyGallery(),
               ),
               _Section(
                 '02',
                 'Color',
                 description:
-                    'Surfaces, primary/secondary action colors, text roles, borders '
-                    'and feedback semantics.',
-                child: _ColorGallery(),
+                    'Two palettes ship with the system — graphite (dark) and '
+                    'paper (light). Every surface, action and feedback role '
+                    'derives from these roles.',
+                child: const _ColorGallery(),
               ),
               _Section(
                 '03',
@@ -59,7 +65,7 @@ class DesignSystemPage extends StatelessWidget {
                 description:
                     'Every gap and corner derives from the token scale — never '
                     'arbitrary numbers.',
-                child: _GeometryGallery(),
+                child: const _GeometryGallery(),
               ),
               _Section(
                 '04',
@@ -67,15 +73,15 @@ class DesignSystemPage extends StatelessWidget {
                 description:
                     'Primary, secondary, outlined, destructive and text. '
                     'States: idle, disabled and loading.',
-                child: _ButtonGallery(),
+                child: const _ButtonGallery(),
               ),
               _Section(
                 '05',
                 'Inputs',
                 description:
-                    'Filled, rounded fields with focus and error styling from the '
-                    'theme.',
-                child: _InputGallery(),
+                    'Filled, rounded fields with focus and error styling from '
+                    'the theme.',
+                child: const _InputGallery(),
               ),
               _Section(
                 '06',
@@ -83,13 +89,13 @@ class DesignSystemPage extends StatelessWidget {
                 description:
                     'Standard and elevated surfaces; interactive cards expose '
                     'hover, focus and ripple.',
-                child: _CardGallery(),
+                child: const _CardGallery(),
               ),
               _Section(
                 '07',
                 'Badges & dividers',
                 description: 'Status pills and the labeled divider.',
-                child: _BadgeGallery(),
+                child: const _BadgeGallery(),
               ),
               _Section(
                 '08',
@@ -97,18 +103,36 @@ class DesignSystemPage extends StatelessWidget {
                 description:
                     'Snackbars, dialogs and confirmations — the only sanctioned '
                     'paths for transient messages.',
-                child: _FeedbackGallery(),
+                child: const _FeedbackGallery(),
               ),
               _Section(
                 '09',
                 'States',
                 description: 'Loading, empty and error placeholders.',
-                child: _StateGallery(),
+                child: const _StateGallery(),
               ),
             ],
           ),
         ),
       ),
+    );
+  }
+}
+
+/// A compact readout bar that frames the catalog like a systems console.
+class _TechBar extends StatelessWidget {
+  const _TechBar();
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: AppSpacing.sm,
+      runSpacing: AppSpacing.sm,
+      children: const [
+        TechReadout('14 type roles', icon: Icons.text_fields_rounded),
+        TechReadout('2 palettes', icon: Icons.invert_colors_on_rounded),
+        TechReadout('15 components', icon: Icons.widgets_outlined),
+      ],
     );
   }
 }
@@ -143,22 +167,36 @@ class _Section extends StatelessWidget {
             textBaseline: TextBaseline.alphabetic,
             children: [
               SizedBox(
-                width: 40,
-                child: Text(
-                  index,
-                  style: textTheme.bodySmall?.copyWith(
-                    color: tokens.textMuted,
-                    fontFamily: 'monospace',
-                  ),
+                width: 64,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'SEC',
+                      style: textTheme.labelSmall?.copyWith(
+                        color: tokens.textMuted,
+                        letterSpacing: 1.6,
+                      ),
+                    ),
+                    Text(
+                      index,
+                      style: textTheme.titleLarge?.copyWith(
+                        color: tokens.secondary,
+                        fontFamily: 'monospace',
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
                 ),
               ),
               Expanded(child: Text(title, style: textTheme.headlineSmall)),
+              const TechLabel('CMD'),
             ],
           ),
           if (description != null) ...[
             const SizedBox(height: AppSpacing.sm),
             Padding(
-              padding: const EdgeInsets.only(left: 40),
+              padding: const EdgeInsets.only(left: 64),
               child: Text(
                 description!,
                 style: textTheme.bodyMedium?.copyWith(
@@ -239,64 +277,179 @@ class _PaletteEntry {
   final Color onColor;
 }
 
-class _ColorGallery extends StatelessWidget {
-  const _ColorGallery();
+/// Renders one palette in a wrapped grid of swatches. Shows the measured
+/// 8-digit ARGB value of every token so design audits stay exact.
+class _PaletteGrid extends StatelessWidget {
+  const _PaletteGrid({required this.entries});
+
+  final List<_PaletteEntry> entries;
 
   @override
   Widget build(BuildContext context) {
-    final c = context.appColors;
-    final entries = <_PaletteEntry>[
-      _PaletteEntry('background', c.background, c.textPrimary),
-      _PaletteEntry('surface', c.surface, c.textPrimary),
-      _PaletteEntry('surfaceElevated', c.surfaceElevated, c.textPrimary),
-      _PaletteEntry('surfaceAlt', c.surfaceAlt, c.textPrimary),
-      _PaletteEntry('primary', c.primary, c.onPrimary),
-      _PaletteEntry('primaryContainer', c.primaryContainer, c.textPrimary),
-      _PaletteEntry('secondary', c.secondary, c.onPrimary),
-      _PaletteEntry(
-        'secondaryContainer',
-        c.secondaryContainer,
-        c.onSecondaryContainer,
-      ),
-      _PaletteEntry('textPrimary', c.textPrimary, c.onPrimary),
-      _PaletteEntry('textSecondary', c.textSecondary, c.onPrimary),
-      _PaletteEntry('textMuted', c.textMuted, c.onPrimary),
-      _PaletteEntry('border', c.border, c.textPrimary),
-      _PaletteEntry('success', c.success, c.onPrimary),
-      _PaletteEntry('warning', c.warning, c.onPrimary),
-      _PaletteEntry('danger', c.danger, c.onPrimary),
-      _PaletteEntry('info', c.info, c.onPrimary),
-    ];
-
+    final tokens = context.appColors;
+    final textTheme = Theme.of(context).textTheme;
     return Wrap(
       spacing: AppSpacing.sm,
       runSpacing: AppSpacing.sm,
       children: [
         for (final entry in entries)
           Container(
-            width: 140,
+            width: 128,
             decoration: BoxDecoration(
               color: entry.color,
               borderRadius: AppRadius.smAll,
-              border: Border.all(color: c.border),
+              border: Border.all(color: tokens.border),
             ),
             padding: const EdgeInsets.all(AppSpacing.md),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  entry.name,
-                  style: Theme.of(context).textTheme.labelMedium,
-                ),
+                Text(entry.name, style: textTheme.labelMedium),
                 const SizedBox(height: AppSpacing.sm),
                 Text(
                   entry.color.toARGB32().toRadixString(16).padLeft(8, '0'),
-                  style: Theme.of(context).textTheme.bodySmall,
+                  style: textTheme.bodySmall,
                 ),
               ],
             ),
           ),
       ],
+    );
+  }
+}
+
+class _ColorGallery extends StatelessWidget {
+  const _ColorGallery();
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.appColors;
+    final textTheme = Theme.of(context).textTheme;
+
+    final darkEntries = <_PaletteEntry>[
+      _PaletteEntry(
+        'background',
+        AppColorsDark.background,
+        AppColorsDark.textPrimary,
+      ),
+      _PaletteEntry(
+        'surface',
+        AppColorsDark.surface,
+        AppColorsDark.textPrimary,
+      ),
+      _PaletteEntry(
+        'surfaceElevated',
+        AppColorsDark.surfaceElevated,
+        AppColorsDark.textPrimary,
+      ),
+      _PaletteEntry(
+        'surfaceAlt',
+        AppColorsDark.surfaceAlt,
+        AppColorsDark.textPrimary,
+      ),
+      _PaletteEntry('primary', AppColorsDark.primary, AppColorsDark.onPrimary),
+      _PaletteEntry(
+        'primaryContainer',
+        AppColorsDark.primaryContainer,
+        AppColorsDark.textPrimary,
+      ),
+      _PaletteEntry(
+        'secondary',
+        AppColorsDark.secondary,
+        AppColorsDark.onPrimary,
+      ),
+      _PaletteEntry(
+        'secondaryContainer',
+        AppColorsDark.secondaryContainer,
+        AppColorsDark.onSecondaryContainer,
+      ),
+      _PaletteEntry(
+        'textPrimary',
+        AppColorsDark.textPrimary,
+        AppColorsDark.onPrimary,
+      ),
+      _PaletteEntry(
+        'textSecondary',
+        AppColorsDark.textSecondary,
+        AppColorsDark.onPrimary,
+      ),
+      _PaletteEntry(
+        'textMuted',
+        AppColorsDark.textMuted,
+        AppColorsDark.onPrimary,
+      ),
+      _PaletteEntry('border', AppColorsDark.border, AppColorsDark.textPrimary),
+      _PaletteEntry('success', AppColorsDark.success, AppColorsDark.onPrimary),
+      _PaletteEntry('warning', AppColorsDark.warning, AppColorsDark.onPrimary),
+      _PaletteEntry('danger', AppColorsDark.danger, AppColorsDark.onPrimary),
+      _PaletteEntry('info', AppColorsDark.info, AppColorsDark.onPrimary),
+    ];
+    final lightEntries = <_PaletteEntry>[
+      _PaletteEntry('background', AppColors.background, AppColors.textPrimary),
+      _PaletteEntry('surface', AppColors.surface, AppColors.textPrimary),
+      _PaletteEntry(
+        'surfaceElevated',
+        AppColors.surfaceElevated,
+        AppColors.textPrimary,
+      ),
+      _PaletteEntry('primary', AppColors.primary, AppColors.onPrimary),
+      _PaletteEntry(
+        'primaryContainer',
+        AppColors.primaryContainer,
+        AppColors.textPrimary,
+      ),
+      _PaletteEntry('secondary', AppColors.secondary, AppColors.onPrimary),
+      _PaletteEntry('textPrimary', AppColors.textPrimary, AppColors.onPrimary),
+      _PaletteEntry(
+        'textSecondary',
+        AppColors.textSecondary,
+        AppColors.onPrimary,
+      ),
+      _PaletteEntry('textMuted', AppColors.textMuted, AppColors.onPrimary),
+      _PaletteEntry('border', AppColors.border, AppColors.textPrimary),
+      _PaletteEntry('success', AppColors.success, AppColors.surface),
+      _PaletteEntry('warning', AppColors.warning, AppColors.surface),
+      _PaletteEntry('danger', AppColors.danger, AppColors.surface),
+      _PaletteEntry('info', AppColors.info, AppColors.surface),
+    ];
+
+    return AppCard(
+      variant: AppCardVariant.elevated,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              const Expanded(
+                child: TechLabel('Graphite · dark', icon: Icons.dark_mode),
+              ),
+              const AppBadge('active'),
+              const SizedBox(width: AppSpacing.sm),
+              AppBadge('ink', variant: AppBadgeVariant.info),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.md),
+          _PaletteGrid(entries: darkEntries),
+          const SizedBox(height: AppSpacing.lg),
+          const Divider(),
+          const SizedBox(height: AppSpacing.lg),
+          Row(
+            children: [
+              const Expanded(
+                child: TechLabel('Paper · light', icon: Icons.light_mode),
+              ),
+              AppBadge('neutral'),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            'The ink token is shared by primary and textPrimary.',
+            style: textTheme.bodySmall?.copyWith(color: c.textMuted),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          _PaletteGrid(entries: lightEntries),
+        ],
+      ),
     );
   }
 }
@@ -563,6 +716,7 @@ class _BadgeGallery extends StatelessWidget {
           children: [
             for (final variant in AppBadgeVariant.values)
               AppBadge(variant.name, variant: variant),
+            const AppBadge('neutral'),
             AppBadge(
               'With dot',
               variant: AppBadgeVariant.success,

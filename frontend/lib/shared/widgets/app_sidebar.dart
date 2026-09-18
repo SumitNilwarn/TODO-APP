@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 
+import '../theme/command_design_tokens.dart';
 import '../theme/design_tokens.dart';
 import '../theme/theme_extensions.dart';
-import 'app_kicker.dart';
+import 'chrome/architectural_grid.dart';
+import 'chrome/command_chrome.dart';
+import 'chrome/theme_switcher.dart';
 
 /// A single navigation destination in the sidebar.
 @immutable
@@ -29,12 +32,11 @@ class AppNavItem {
 
 /// Persistent navigation rail, driven by the same component on every screen.
 ///
-/// Renders a brand row, a quiet "Navigation" section eyebrow, the navigation
-/// list and a footer slot (user/actions). Navigation items expose full keyboard
-/// focus, hover/press overlays and a selected state (calm surface + ink icon +
-/// accent bar), responding with a subtle leading-icon slide on hover; the
-/// container itself stays quiet so it works inside a desktop `Row`, a `Drawer`
-/// or a narrow rail.
+/// The command-center chrome: a technical brand identity, an indexed
+/// navigation list with a glowing active rail, a theme switcher and the
+/// caller's footer slot. Navigation items keep full keyboard focus,
+/// hover/press overlays and a selected state, so behavior is unchanged — only
+/// the material language is richer.
 class AppSidebar extends StatelessWidget {
   const AppSidebar({
     super.key,
@@ -70,105 +72,119 @@ class AppSidebar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
     final tokens = context.appColors;
-
-    final brand = Row(
-      children: [
-        Container(
-          width: AppSizes.brandMark,
-          height: AppSizes.brandMark,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: tokens.primary,
-            borderRadius: AppRadius.mediumAll,
-          ),
-          child: Icon(
-            brandIcon,
-            size: 18,
-            color: tokens.onPrimary,
-            semanticLabel: brandTitle,
-          ),
-        ),
-        if (brandTitle != null) ...[
-          const SizedBox(width: AppSpacing.tight),
-          Flexible(
-            child: Text(
-              brandTitle!,
-              style: textTheme.titleSmall,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ],
-      ],
-    );
 
     return SizedBox(
       width: AppSizes.sidebarWidth,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.page,
-              AppSpacing.xl,
-              AppSpacing.page,
-              AppSpacing.lg,
-            ),
-            child: brand,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [tokens.surfaceElevated, tokens.background],
           ),
-          if (header != null)
+          border: Border(right: BorderSide(color: tokens.border)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.page,
+                AppSpacing.xl,
+                AppSpacing.page,
+                AppSpacing.lg,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  CommandIdentity(
+                    title: brandTitle,
+                    subtitle: brandTitle == null ? null : 'Command center',
+                    icon: brandIcon,
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
+                  const CommandRule(height: AppSpacing.md),
+                ],
+              ),
+            ),
+            if (header != null)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.page,
+                  0,
+                  AppSpacing.page,
+                  AppSpacing.sm,
+                ),
+                child: header!,
+              ),
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.page,
+                ),
+                children: [
+                  const Padding(
+                    padding: EdgeInsets.only(
+                      left: AppSpacing.md,
+                      bottom: AppSpacing.sm,
+                      top: AppSpacing.xs,
+                    ),
+                    child: TechLabel('Navigation', icon: Icons.blur_on_rounded),
+                  ),
+                  for (var i = 0; i < items.length; i++)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: AppSpacing.xs),
+                      child: _SidebarItem(
+                        index: i,
+                        item: items[i],
+                        selected: i == selectedIndex,
+                        onTap: onSelect == null
+                            ? null
+                            : () => onSelect!(items[i]),
+                      ),
+                    ),
+                ],
+              ),
+            ),
             Padding(
               padding: const EdgeInsets.fromLTRB(
                 AppSpacing.page,
                 0,
                 AppSpacing.page,
-                AppSpacing.sm,
+                AppSpacing.page,
               ),
-              child: header!,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const CommandRule(height: AppSpacing.lg),
+                  const SizedBox(height: AppSpacing.md),
+                  const ThemeSwitcher(expanded: true),
+                  if (footer != null) ...[
+                    const SizedBox(height: AppSpacing.md),
+                    footer!,
+                  ],
+                ],
+              ),
             ),
-          Expanded(
-            child: ListView(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.page),
-              children: [
-                const Padding(
-                  padding: EdgeInsets.only(
-                    left: AppSpacing.md,
-                    bottom: AppSpacing.sm,
-                    top: AppSpacing.xs,
-                  ),
-                  child: AppKicker(label: 'Navigation'),
-                ),
-                for (var i = 0; i < items.length; i++)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: AppSpacing.xs),
-                    child: _SidebarItem(
-                      item: items[i],
-                      selected: i == selectedIndex,
-                      onTap: onSelect == null
-                          ? null
-                          : () => onSelect!(items[i]),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-          if (footer != null)
-            Padding(
-              padding: const EdgeInsets.all(AppSpacing.page),
-              child: footer!,
-            ),
-        ],
+          ],
+        ),
       ),
     );
   }
 }
 
-/// Rounded navigation row with focus, hover, press and selected states.
+/// Rounded navigation row with focus, hover, press and selected states,
+/// refinished with an indexed readout and a glowing active rail.
 class _SidebarItem extends StatefulWidget {
-  const _SidebarItem({required this.item, required this.selected, this.onTap});
+  const _SidebarItem({
+    required this.index,
+    required this.item,
+    required this.selected,
+    this.onTap,
+  });
 
+  final int index;
   final AppNavItem item;
   final bool selected;
   final VoidCallback? onTap;
@@ -183,6 +199,7 @@ class _SidebarItemState extends State<_SidebarItem> {
   @override
   Widget build(BuildContext context) {
     final tokens = context.appColors;
+    final command = context.commandTokens;
     final textTheme = Theme.of(context).textTheme;
     final item = widget.item;
     final selected = widget.selected;
@@ -202,6 +219,7 @@ class _SidebarItemState extends State<_SidebarItem> {
     final icon = (selected && item.selectedIcon != null)
         ? item.selectedIcon!
         : item.icon;
+    final code = (widget.index + 1).toString().padLeft(2, '0');
 
     return Semantics(
       button: true,
@@ -233,18 +251,43 @@ class _SidebarItemState extends State<_SidebarItem> {
             decoration: BoxDecoration(
               color: background,
               borderRadius: AppRadius.mediumAll,
+              border: Border.all(
+                color: selected
+                    ? command.frame
+                    : hovered
+                    ? tokens.border
+                    : Colors.transparent,
+              ),
+              boxShadow: selected
+                  ? [
+                      BoxShadow(
+                        color: command.glow,
+                        blurRadius: 16,
+                        spreadRadius: -6,
+                      ),
+                    ]
+                  : null,
             ),
             child: Row(
               children: [
-                // A quiet accent bar marks the active destination.
+                // A quiet glowing rail marks the active destination.
                 AnimatedContainer(
                   duration: AppDurations.fast,
                   curve: AppCurves.enter,
                   width: 3,
-                  height: selected ? 20 : 0,
+                  height: selected ? 22 : 0,
                   decoration: BoxDecoration(
                     color: tokens.primary,
                     borderRadius: AppRadius.pillAll,
+                    boxShadow: selected
+                        ? [
+                            BoxShadow(
+                              color: command.glowStrong,
+                              blurRadius: 10,
+                              spreadRadius: -2,
+                            ),
+                          ]
+                        : null,
                   ),
                 ),
                 const SizedBox(width: AppSpacing.sm + 3),
@@ -264,6 +307,14 @@ class _SidebarItemState extends State<_SidebarItem> {
                     style: labelStyle!,
                     child: Text(item.label, maxLines: 1),
                   ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Text(
+                  code,
+                  style: CommandText.label(
+                    context,
+                    color: selected ? tokens.textSecondary : tokens.textMuted,
+                  ).copyWith(letterSpacing: 0.5, fontSize: 10),
                 ),
               ],
             ),

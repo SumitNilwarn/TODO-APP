@@ -7,16 +7,18 @@ import 'package:todo_app/shared/theme/app_theme.dart';
 import 'package:todo_app/shared/theme/theme_extensions.dart';
 
 void main() {
-  testWidgets('the app applies the light Todo App theme', (tester) async {
+  testWidgets('the app applies the GRAPHITE Todo App theme by default', (
+    tester,
+  ) async {
     await tester.pumpWidget(const TodoApp());
 
     final context = tester.element(find.byType(HomePage));
     final theme = Theme.of(context);
 
     expect(theme.useMaterial3, isTrue);
-    expect(theme.brightness, Brightness.light);
-    expect(theme.scaffoldBackgroundColor, AppColors.background);
-    expect(theme.colorScheme.error, AppColors.danger);
+    expect(theme.brightness, Brightness.dark);
+    expect(theme.scaffoldBackgroundColor, AppColorsDark.background);
+    expect(theme.colorScheme.error, AppColorsDark.danger);
 
     // Typography hierarchy is defined with semantic roles.
     expect(theme.textTheme.headlineMedium, isNotNull);

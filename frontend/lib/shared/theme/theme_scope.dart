@@ -1,24 +1,32 @@
 import 'package:flutter/widgets.dart';
 
-/// App-scoped theme preference (light/dark) so any screen — e.g. the sidebar
-/// footer — can read the current mode and switch it.
+/// App-scoped theme preference so any screen — e.g. the sidebar theme
+/// switcher — can read the current mode and switch it.
 ///
-/// The root [TodoApp] owns the boolean state and rebuilds `MaterialApp`'s
-/// `themeMode`, which animates the palette change through the built-in theme
-/// transition.
+/// The root [TodoApp] owns the boolean and rebuilds `MaterialApp`'s
+/// `themeMode` with the WHITE / GRAPHITE pair, which animates the palette
+/// change through the built-in theme transition.
 class ThemeScope extends InheritedWidget {
   const ThemeScope({
     super.key,
-    required this.dark,
-    required this.onToggle,
+    required this.graphite,
+    required this.onChange,
     required super.child,
   });
 
-  /// Whether the app currently renders the dark theme.
-  final bool dark;
+  /// Whether the app currently renders the GRAPHITE theme (the cinematic
+  /// default). `false` renders WHITE.
+  final bool graphite;
 
-  /// Flips the theme preference.
-  final VoidCallback onToggle;
+  /// Flipped the active theme; receives the new `graphite` value.
+  final ValueChanged<bool> onChange;
+
+  /// Backwards-compatible alias — graphite is the app's "dark" mode.
+  bool get dark => graphite;
+
+  /// Backwards-compatible toggle for callers that only flip the mode.
+  VoidCallback get onToggle =>
+      () => onChange(!graphite);
 
   static ThemeScope of(BuildContext context) {
     final scope = context.dependOnInheritedWidgetOfExactType<ThemeScope>();
@@ -28,6 +36,6 @@ class ThemeScope extends InheritedWidget {
 
   @override
   bool updateShouldNotify(ThemeScope oldWidget) {
-    return oldWidget.dark != dark || oldWidget.onToggle != onToggle;
+    return oldWidget.graphite != graphite || oldWidget.onChange != onChange;
   }
 }

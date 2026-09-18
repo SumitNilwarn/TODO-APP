@@ -5,16 +5,16 @@ import '../theme/design_tokens.dart';
 import '../theme/theme_extensions.dart';
 import 'app_page_header.dart';
 import 'app_sidebar.dart';
+import 'chrome/architectural_grid.dart';
 
 /// Application shell: renders the brand + navigation sidebar and the routed
-/// page content with an optional page header.
+/// page content over the architectural grid, with an optional page header.
 ///
 /// Responsive behavior:
 /// - **Compact (< 600):** navigation collapses behind a `Drawer`; content and
 ///   the page header flow vertically with a top app bar.
 /// - **Tablet/Desktop (≥ 600):** the [AppSidebar] stays pinned on the left and
-///   content flows beside it, centered through [ResponsiveContainer] via the
-///   caller (or the optional [ResponsiveContainer]-based [body]).
+///   content flows beside it.
 ///
 /// No navigation logic lives here — [navItems] + [selectedIndex] + [onSelect]
 /// are passed in so every feature keeps owning its routing.
@@ -102,14 +102,17 @@ class AppShell extends StatelessWidget {
         ),
       ),
       body: SafeArea(
-        child: _Content(
-          kicker: kicker,
-          title: title,
-          subtitle: subtitle,
-          leading: leading,
-          actions: actions,
-          body: body,
-          compact: true,
+        child: ArchitecturalGrid(
+          glowAlignment: Alignment.topCenter,
+          child: _Content(
+            kicker: kicker,
+            title: title,
+            subtitle: subtitle,
+            leading: leading,
+            actions: actions,
+            body: body,
+            compact: true,
+          ),
         ),
       ),
     );
@@ -122,33 +125,28 @@ class AppShell extends StatelessWidget {
       body: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          DecoratedBox(
-            decoration: BoxDecoration(
-              color: context.appColors.surface,
-              border: Border(
-                right: BorderSide(color: context.appColors.border),
-              ),
-            ),
-            child: SafeArea(
-              child: AppSidebar(
-                items: navItems,
-                selectedIndex: selectedIndex,
-                onSelect: onSelect,
-                brandTitle: brandTitle,
-                footer: footer,
-              ),
+          SafeArea(
+            child: AppSidebar(
+              items: navItems,
+              selectedIndex: selectedIndex,
+              onSelect: onSelect,
+              brandTitle: brandTitle,
+              footer: footer,
             ),
           ),
           Expanded(
             child: SafeArea(
-              child: _Content(
-                kicker: kicker,
-                title: title,
-                subtitle: subtitle,
-                leading: leading,
-                actions: actions,
-                body: body,
-                compact: false,
+              child: ArchitecturalGrid(
+                glowAlignment: Alignment.topRight,
+                child: _Content(
+                  kicker: kicker,
+                  title: title,
+                  subtitle: subtitle,
+                  leading: leading,
+                  actions: actions,
+                  body: body,
+                  compact: false,
+                ),
               ),
             ),
           ),

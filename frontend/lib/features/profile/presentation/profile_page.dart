@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../data/api/api_exception.dart';
+import '../../../shared/theme/command_design_tokens.dart';
 import '../../../shared/theme/design_tokens.dart';
 import '../../../shared/theme/theme_extensions.dart';
 import '../../../shared/widgets/app_button.dart';
@@ -9,6 +10,7 @@ import '../../../shared/widgets/app_empty_state.dart';
 import '../../../shared/widgets/app_error_state.dart';
 import '../../../shared/widgets/app_loading.dart';
 import '../../../shared/widgets/app_snackbar.dart';
+import '../../../shared/widgets/chrome/command_chrome.dart';
 import '../../../shared/widgets/responsive_container.dart';
 import '../../auth/presentation/app_scope.dart';
 import '../../auth/presentation/authenticated_scaffold.dart';
@@ -322,6 +324,7 @@ class _ProfilePageState extends State<ProfilePage> {
   /// Identity header strip: monogram, display name and current time zone.
   Widget _buildIdentity(BuildContext context) {
     final tokens = context.appColors;
+    final command = context.commandTokens;
     final textTheme = Theme.of(context).textTheme;
     final auth = AppScope.authOf(context);
     final name = _displayName.text.trim().isNotEmpty
@@ -340,6 +343,13 @@ class _ProfilePageState extends State<ProfilePage> {
           decoration: BoxDecoration(
             color: tokens.primary,
             borderRadius: AppRadius.mdAll,
+            boxShadow: [
+              BoxShadow(
+                color: command.glowStrong,
+                blurRadius: 18,
+                spreadRadius: -4,
+              ),
+            ],
           ),
           child: Text(
             initial,
@@ -500,15 +510,7 @@ class _SectionLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tokens = context.appColors;
-    return Text(
-      label.toUpperCase(),
-      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-        color: tokens.textMuted,
-        letterSpacing: 1.4,
-        fontWeight: FontWeight.w700,
-      ),
-    );
+    return TechLabel(label);
   }
 }
 

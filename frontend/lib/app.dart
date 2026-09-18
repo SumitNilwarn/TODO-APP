@@ -5,6 +5,7 @@ import 'features/auth/presentation/app_scope.dart';
 import 'features/auth/presentation/auth_state.dart';
 import 'presentation/router/app_router.dart';
 import 'shared/theme/app_theme.dart';
+import 'shared/theme/theme_preferences.dart';
 import 'shared/theme/theme_scope.dart';
 
 /// Root widget of the Todo App.
@@ -12,14 +13,15 @@ import 'shared/theme/theme_scope.dart';
 /// Owns the single [AuthState] (and with it the authenticated HTTP transport)
 /// and exposes it to every routed screen through [AppScope]. The session is
 /// resolved on first frame so route guards know immediately whether the user
-/// is signed in. The light/dark theme preference is owned here as well and
-/// shared through [ThemeScope].
+/// is signed in. The WHITE / GRAPHITE theme preference is owned here as well,
+/// restored from `localStorage` on the web and shared through [ThemeScope].
 class TodoApp extends StatefulWidget {
   const TodoApp({
     super.key,
     this.initialRoute = AppRouter.home,
     this.authState,
-    this.dark = false,
+    this.graphite = true,
+    this.dark,
   });
 
   /// Starting route; defaults to the home page. Overridable for tests.
@@ -29,8 +31,13 @@ class TodoApp extends StatefulWidget {
   /// app creates and owns its own [AuthState].
   final AuthState? authState;
 
-  /// Starting theme preference; defaults to light. Overridable for tests.
-  final bool dark;
+  /// Starting theme preference; defaults to GRAPHITE (the cinematic look).
+  /// Overridable for tests.
+  final bool graphite;
+
+  /// Legacy alias for [graphite] (previous `dark` semantics). When provided it
+  /// wins over [graphite].
+  final bool? dark;
 
   @override
   State<TodoApp> createState() => _TodoAppState();
@@ -39,15 +46,31 @@ class TodoApp extends StatefulWidget {
 class _TodoAppState extends State<TodoApp> {
   late final AuthState _auth;
   late final bool _ownsAuth;
-  late bool _dark;
+  late bool _graphite;
 
   @override
   void initState() {
     super.initState();
     _ownsAuth = widget.authState == null;
     _auth = widget.authState ?? AuthState();
-    _dark = widget.dark;
+    _graphite = _resolveInitialTheme();
     _auth.initialise();
+  }
+
+  bool _resolveInitialTheme() {
+    final explicit = widget.dark ?? widget.graphite;
+    switch (ThemePreferences.storedMode) {
+      case ThemePreferences.white:
+        return false;
+      case ThemePreferences.graphite:
+        return true;
+    }
+    return explicit;
+  }
+
+  void _switchTheme(bool graphite) {
+    setState(() => _graphite = graphite);
+    ThemePreferences.persist(graphite ? 'graphite' : 'white');
   }
 
   @override
@@ -63,14 +86,14 @@ class _TodoAppState extends State<TodoApp> {
     return AppScope(
       auth: _auth,
       child: ThemeScope(
-        dark: _dark,
-        onToggle: () => setState(() => _dark = !_dark),
+        graphite: _graphite,
+        onChange: _switchTheme,
         child: MaterialApp(
           title: AppConstants.appName,
           debugShowCheckedModeBanner: false,
-          theme: AppTheme.light(),
-          darkTheme: AppTheme.dark(),
-          themeMode: _dark ? ThemeMode.dark : ThemeMode.light,
+          theme: AppTheme.white(),
+          darkTheme: AppTheme.graphite(),
+          themeMode: _graphite ? ThemeMode.dark : ThemeMode.light,
           initialRoute: widget.initialRoute,
           onGenerateRoute: AppRouter.onGenerateRoute,
           builder: (context, child) {

@@ -102,65 +102,92 @@ abstract final class AppColors {
   static const Color muted = textMuted;
 }
 
-/// Dark-mode mirror of [AppColors]: the same semantic roles, re-mapped so the
-/// UI stays equally calm and readable on deep neutral surfaces. The primary
-/// ink inverts to a near-white CTA for strong, premium contrast in dark mode.
+/// GRAPHITE palette — the default "command center" theme.
+///
+/// A cinematic, futuristic mirror of [AppColors]: deep blue-steel graphene
+/// surfaces, near-white steel ink CTAs and a cool, faint glow used by the
+/// architectural grid and chrome framing. Where the light palette is calm
+/// paper, GRAPHITE is machined steel — the same semantic roles, re-mapped for
+/// a darker, denser command-room presence.
 abstract final class AppColorsDark {
   // ── Surfaces ─────────────────────────────────────────────────────────────
-  static const Color background = Color(0xFF0F0F12);
+  /// Deep graphene base — the page sits a step below every surface.
+  static const Color background = Color(0xFF0A0B0D);
 
-  static const Color surface = Color(0xFF17171B);
+  /// Default elevated surface (cards, inputs) — machined steel.
+  static const Color surface = Color(0xFF131519);
 
-  static const Color surfaceElevated = Color(0xFF1D1D22);
+  /// Silent surface raised above [surface] (rails, popovers, menus).
+  static const Color surfaceElevated = Color(0xFF171A1F);
 
-  static const Color surfaceAlt = Color(0xFF232329);
+  /// Slightly tinted surface for secondary fills and hover states.
+  static const Color surfaceAlt = Color(0xFF1C2026);
 
-  static const Color hoverSurface = Color(0xFF1C1C21);
+  /// Interactive hover plane (nav items, rows, button surfaces).
+  static const Color hoverSurface = Color(0xFF191C21);
 
-  static const Color selectedSurface = Color(0xFF26262D);
+  /// Pressed/selected plane (active nav item, selected list rows).
+  static const Color selectedSurface = Color(0xFF22262E);
 
   // ── Primary action ───────────────────────────────────────────────────────
-  static const Color primary = Color(0xFFF4F4F6);
+  /// The brand/primary CTA — near-white cool steel, high-contrast on graphite.
+  static const Color primary = Color(0xFFE4E8EF);
 
-  static const Color onPrimary = Color(0xFF16161A);
+  static const Color onPrimary = Color(0xFF0C0E11);
 
-  static const Color primaryContainer = Color(0xFF292930);
+  /// Soft container for the primary emphasis (selected nav, tinted bars).
+  static const Color primaryContainer = Color(0xFF262B33);
 
   // ── Secondary accent ─────────────────────────────────────────────────────
-  static const Color secondary = Color(0xFFB0B0BA);
+  /// Cool blue-steel accent for focus and secondary emphasis.
+  static const Color secondary = Color(0xFF97A1B3);
 
-  static const Color onSecondary = Color(0xFF16161A);
+  static const Color onSecondary = Color(0xFF0C0E11);
 
-  static const Color secondaryContainer = Color(0xFF2B2B33);
+  /// Tint container for secondary selections (selected nav item, chips).
+  static const Color secondaryContainer = Color(0xFF262932);
 
-  static const Color onSecondaryContainer = Color(0xFFDCDCE2);
+  /// Text on [secondaryContainer].
+  static const Color onSecondaryContainer = Color(0xFFD3DAE4);
 
   // ── Text & icon roles ────────────────────────────────────────────────────
-  static const Color textPrimary = Color(0xFFF0F0F3);
+  /// Primary craft: headings and strong text — cool silver-white.
+  static const Color textPrimary = Color(0xFFE8EAF0);
 
-  static const Color textSecondary = Color(0xFFB6B6BF);
+  /// Secondary text — descriptions, meta, unselected nav.
+  static const Color textSecondary = Color(0xFFA8B0BD);
 
-  static const Color textMuted = Color(0xFF8B8B95);
+  /// Muted/quiet text for captions, hints and placeholders.
+  static const Color textMuted = Color(0xFF6F7684);
 
-  static const Color onInk = Color(0xFF16161A);
+  /// Calm ink used on the [primary] CTA. Same value as [onPrimary].
+  static const Color onInk = Color(0xFF0C0E11);
 
   // ── Lines & separators ───────────────────────────────────────────────────
-  static const Color border = Color(0xFF26262C);
+  /// Hairline border on cards and outlined surfaces.
+  static const Color border = Color(0xFF262A32);
 
-  static const Color subtleBorder = Color(0x26FFFFFF);
+  /// Hairline subtle border (legacy alias, used on interactive cards).
+  static const Color subtleBorder = Color(0x1EFFFFFF);
 
-  static const Color divider = Color(0x2EFFFFFF);
+  /// Hairline divider between stacked content.
+  static const Color divider = Color(0x24FFFFFF);
 
-  static const Color scrim = Color(0x99000000);
+  /// Dimmed plane behind modals, sheets and overlays.
+  static const Color scrim = Color(0xAD000000);
 
   // ── Feedback semantics (brighter for dark surfaces) ──────────────────────
-  static const Color danger = Color(0xFFE57373);
+  /// Danger / destructive (errors, destructive actions).
+  static const Color danger = Color(0xFFF0756B);
 
-  static const Color warning = Color(0xFFE3B34C);
+  /// Warning / caution (attention without blocking).
+  static const Color warning = Color(0xFFE6BE6A);
 
-  static const Color success = Color(0xFF66BB6A);
+  /// Positive / success.
+  static const Color success = Color(0xFF74CE9A);
 
-  static const Color info = Color(0xFF90CAF9);
+  /// Informational emphasis (contact-support, tips).
+  static const Color info = Color(0xFF82B4E8);
 
   // ── Legacy aliases ───────────────────────────────────────────────────────
   static const Color ink = primary;

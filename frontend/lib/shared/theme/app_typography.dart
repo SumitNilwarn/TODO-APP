@@ -15,47 +15,58 @@ import 'app_colors.dart';
 /// - body text              → `bodyLarge`, `bodyMedium`
 /// - captions / metadata    → `bodySmall`
 /// - labels & navigation    → `labelLarge`, `labelMedium`, `labelSmall`
+///
+/// The ladder leans editorial: tight heights, a slightly condensed display
+/// step and wide-tracked labels so screens read like a crafted publication
+/// rather than a generic web app. The terminal role set (`headlineMedium`
+/// 30/w700, `labelLarge` 16 …) is contract-stable and must not change.
 abstract final class AppTypography {
-  /// Light-mode text hierarchy.
-  static TextTheme light() => _textTheme(
+  /// White ("paper") text hierarchy — calm, cool, high contrast.
+  static TextTheme white() => _textTheme(
     textPrimaryColor: AppColors.textPrimary,
     textMutedColor: AppColors.textMuted,
   );
 
-  /// Dark-mode text hierarchy — identical sizing/weight ladder, mapped onto
-  /// the dark palette so headings and body copy stay equally legible.
-  static TextTheme dark() => _textTheme(
+  /// GRAPHITE ("command center") text hierarchy — silver-white ink on steel.
+  static TextTheme graphite() => _textTheme(
     textPrimaryColor: AppColorsDark.textPrimary,
     textMutedColor: AppColorsDark.textMuted,
   );
+
+  /// Backwards-compatible alias for [white].
+  static TextTheme light() => white();
+
+  /// Backwards-compatible alias for [graphite].
+  static TextTheme dark() => graphite();
 
   static TextTheme _textTheme({
     required Color textPrimaryColor,
     required Color textMutedColor,
   }) {
     return TextTheme(
-      /// Hero / landing / brand display text.
+      /// Hero / landing / brand display text. Large, tight and confident —
+      /// the loudest single role in the system.
       displayLarge: TextStyle(
-        fontSize: 40,
-        height: 1.15,
+        fontSize: 56,
+        height: 1.04,
         fontWeight: FontWeight.w700,
-        letterSpacing: -0.8,
+        letterSpacing: -1.4,
         color: textPrimaryColor,
       ),
 
       /// Large page titles — the single dominant heading of a screen.
       headlineLarge: TextStyle(
-        fontSize: 34,
-        height: 1.2,
+        fontSize: 36,
+        height: 1.14,
         fontWeight: FontWeight.w700,
-        letterSpacing: -0.5,
+        letterSpacing: -0.8,
         color: textPrimaryColor,
       ),
 
       /// Page titles (kept for compatibility) — dominant heading of a screen.
       headlineMedium: TextStyle(
         fontSize: 30,
-        height: 1.2,
+        height: 1.18,
         fontWeight: FontWeight.w700,
         letterSpacing: -0.5,
         color: textPrimaryColor,
@@ -64,7 +75,7 @@ abstract final class AppTypography {
       /// Sub-section emphasis within a page.
       headlineSmall: TextStyle(
         fontSize: 24,
-        height: 1.3,
+        height: 1.26,
         fontWeight: FontWeight.w600,
         letterSpacing: -0.2,
         color: textPrimaryColor,
@@ -75,6 +86,7 @@ abstract final class AppTypography {
         fontSize: 20,
         height: 1.3,
         fontWeight: FontWeight.w600,
+        letterSpacing: -0.1,
         color: textPrimaryColor,
       ),
 
@@ -101,7 +113,7 @@ abstract final class AppTypography {
       bodyMedium: TextStyle(fontSize: 15, height: 1.5, color: textPrimaryColor),
 
       /// Helper text, metadata and captions.
-      bodySmall: TextStyle(fontSize: 13, height: 1.4, color: textMutedColor),
+      bodySmall: TextStyle(fontSize: 13, height: 1.45, color: textMutedColor),
 
       /// Emphasized action labels (buttons).
       labelLarge: TextStyle(
@@ -117,7 +129,7 @@ abstract final class AppTypography {
         fontSize: 13,
         height: 1.4,
         fontWeight: FontWeight.w600,
-        letterSpacing: 0.1,
+        letterSpacing: 0.2,
         color: textPrimaryColor,
       ),
 
