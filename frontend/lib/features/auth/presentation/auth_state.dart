@@ -119,6 +119,15 @@ class AuthState extends ChangeNotifier {
       final tokens = await api.login(username: username, password: password);
       _accessToken = tokens.accessToken;
       _refreshToken = tokens.refreshToken;
+
+      // The login response has already authenticated the session, so mark it
+      // authenticated immediately and let route guards navigate without
+      // waiting for the follow-up /auth/me identity fetch. The identity then
+      // resolves in the background and only supplements the UI.
+      _status = AuthStatus.authenticated;
+      _lastError = null;
+      notifyListeners();
+
       return await _loadCurrentUser();
     } on ApiException catch (error) {
       _lastError = _friendlyLoginError(error);
