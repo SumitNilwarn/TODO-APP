@@ -108,7 +108,7 @@ class _AppCardState extends State<AppCard> {
           shape: RoundedRectangleBorder(borderRadius: widget.radius),
           clipBehavior: Clip.antiAlias,
           child: TweenAnimationBuilder<BoxDecoration>(
-            tween: Tween<BoxDecoration>(
+            tween: _BoxDecorationTween(
               begin: decoration(raised: false),
               end: decoration(raised: _hovered),
             ),
@@ -144,4 +144,11 @@ class _AppCardState extends State<AppCard> {
       ),
     );
   }
+}
+
+class _BoxDecorationTween extends Tween<BoxDecoration> {
+  _BoxDecorationTween({super.begin, super.end});
+
+  @override
+  BoxDecoration lerp(double t) => BoxDecoration.lerp(begin, end, t)!;
 }
